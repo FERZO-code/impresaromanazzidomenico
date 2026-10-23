@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Clienti | Romanazzi Domenico</title>
+<link rel="icon" href="/assets/img/brand/logo-rd.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Conti RD">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0B0B0B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
+<link rel="stylesheet" href="/assets/css/admin.css?v=10">
+</head>
+<body>
+<header class="a-bar">
+  <div class="a-bar-in">
+    <a class="a-brand" href="/admin/"><img src="/assets/img/brand/logo-rd.png" alt="" width="40" height="40"><span><b>Romanazzi Domenico</b><small>Rubrica clienti</small></span></a>
+    <nav class="a-nav" aria-label="Sezioni"><a href="/admin/">Conti</a><a href="/admin/clienti.html" aria-current="page">Clienti</a></nav>
+    <form method="post" action="/api/logout"><button class="btn btn--ghost-inv" type="submit">Esci</button></form>
+  </div>
+</header>
+
+<main class="a-wrap">
+  <p class="label">Rubrica</p>
+  <h1>Clienti.</h1>
+
+  <div class="toolbar">
+    <label class="field"><span>Cerca</span><input type="search" id="q" placeholder="Nome, telefono o indirizzo" autocomplete="off"></label>
+    <button class="btn btn--flare" type="button" id="nuovo-cliente">+ Nuovo cliente</button>
+  </div>
+
+  <p class="alert error" id="err" hidden role="alert"></p>
+  <p class="muted" id="conteggio" aria-live="polite"></p>
+  <ul class="rubrica" id="rubrica"></ul>
+
+  <div class="tile grid filebox" style="gap:12px;margin-top:32px">
+    <p style="margin:0"><b>La rubrica è salvata su questo dispositivo.</b> <span class="muted">Per averla anche sull'altro (telefono o computer) o per farne una copia di sicurezza, esporta il file e importalo dall'altra parte: i clienti vengono uniti, non sostituiti.</span></p>
+    <div class="actions">
+      <button class="btn" type="button" id="esporta">Esporta file</button>
+      <label class="btn" for="importa-file">Importa file</label>
+      <input type="file" id="importa-file" accept="application/json,.json" class="visually-hidden">
+    </div>
+    <p class="muted" id="file-info" aria-live="polite" style="margin:0"></p>
+  </div>
+</main>
+
+<dialog class="edit-dlg" id="dlg" aria-labelledby="dlg-titolo">
+  <form id="f" method="dialog" novalidate>
+    <div>
+      <p class="label" style="margin-bottom:6px">Cliente</p>
+      <h2 id="dlg-titolo">Nuovo cliente</h2>
+    </div>
+    <label class="field"><span>Nome e cognome / ragione sociale *</span><input name="nome" required autocomplete="off"></label>
+    <div class="grid grid-2">
+      <label class="field"><span>Telefono</span><input name="telefono" inputmode="tel" autocomplete="off"></label>
+      <label class="field"><span>Email</span><input name="email" type="email" autocomplete="off"></label>
+    </div>
+    <label class="field"><span>Indirizzo</span><input name="indirizzo" autocomplete="off"></label>
+    <label class="field"><span>Codice fiscale / P.IVA</span><input name="codice_fiscale_piva" autocomplete="off"></label>
+    <label class="field"><span>Note (solo per te, non vanno nel PDF)</span><textarea name="note"></textarea></label>
+    <p class="alert error" id="dlg-err" hidden role="alert"></p>
+    <div class="actions">
+      <button class="btn btn--flare" type="submit" id="dlg-salva">Salva</button>
+      <button class="btn" type="button" id="dlg-annulla">Annulla</button>
+      <button class="btn danger" type="button" id="dlg-elimina" style="margin-left:auto">Elimina</button>
+    </div>
+  </form>
+</dialog>
+<script src="/admin/rubrica.js"></script>
+<script src="/admin/clienti.js"></script>
+</body>
+</html>

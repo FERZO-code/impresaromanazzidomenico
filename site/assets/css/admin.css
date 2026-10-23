@@ -159,3 +159,38 @@ h2 { font-size: 1.6rem; }
   #step-foto .actions .btn { flex: 1 1 100%; }
   .drop { min-height: 180px; }
 }
+
+/* ---------- navigazione dell'area riservata ---------- */
+.a-nav { display: flex; gap: 4px; }
+.a-nav a { padding: 10px 12px; font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; color: #C9C9C6; border-bottom: 3px solid transparent; }
+.a-nav a[aria-current="page"] { color: var(--paper); border-bottom-color: var(--flare); }
+.a-nav a:hover { color: var(--paper); }
+@media (max-width: 560px) { .a-brand > span { display: none; } .a-bar-in { gap: 8px; } .a-nav a { padding: 10px 8px; } }
+
+/* ---------- scelta del cliente salvato ---------- */
+.picker { position: relative; }
+.picker-list { position: absolute; z-index: 5; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 0; list-style: none; background: var(--paper); border: 2px solid var(--ink); box-shadow: 6px 6px 0 var(--flare); max-height: 320px; overflow: auto; }
+.picker-list li { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--rule); }
+.picker-list li:last-child { border-bottom: 0; }
+.picker-list li b { display: block; }
+.picker-list li span { font-size: .85rem; color: var(--ash); }
+.picker-list li[aria-selected="true"], .picker-list li:hover { background: var(--warn-bg); }
+.picker-list .vuoto { cursor: default; color: var(--ash); }
+.stato { font-size: .9rem; color: var(--ash); }
+.stato.ok { color: var(--ok); font-weight: 700; }
+
+/* ---------- rubrica ---------- */
+.rubrica { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); list-style: none; margin: 0; padding: 0; }
+.card { background: var(--paper); border: 2px solid var(--ink); border-left: 6px solid var(--flare); padding: 16px; display: grid; gap: 8px; align-content: start; }
+.card h3 { margin: 0; font: 700 1.4rem/1.05 var(--f-display); text-transform: uppercase; }
+.card p { margin: 0; font-size: .95rem; }
+.card a:not(.btn) { color: var(--flare-text); font-weight: 700; }
+.card .actions { margin-top: 6px; }
+.card .btn { min-height: 40px; padding: 0 14px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 24px 0; }
+.toolbar .field { flex: 1 1 260px; }
+.danger { border-color: #B3261E; color: #B3261E; }
+.edit-dlg { width: min(640px, 100vw - 32px); padding: 0; border: 2px solid var(--ink); box-shadow: 10px 10px 0 var(--flare); }
+.edit-dlg::backdrop { background: rgba(11, 11, 11, .72); }
+.edit-dlg form { padding: clamp(18px, 3vw, 28px); display: grid; gap: 16px; }
+.actions:has(#importa-file:focus-visible) label.btn { outline: 3px solid var(--flare); outline-offset: 2px; }

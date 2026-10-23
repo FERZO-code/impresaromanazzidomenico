@@ -205,6 +205,7 @@
       tipo: (form.querySelector('input[name="tipo"]:checked') || {}).value || 'preventivo',
       numero: g('numero'), data: g('data'),
       cliente: { nome: g('cliente.nome'), indirizzo: g('cliente.indirizzo'), codice_fiscale_piva: g('cliente.codice_fiscale_piva'), telefono: g('cliente.telefono') },
+      cliente_id: form.dataset.clienteId || '',
       cantiere: g('cantiere'),
       voci: Array.prototype.map.call(righe.children, leggiRiga).filter(function (v) { return v.descrizione || v.importo != null || v.quantita != null; }),
       iva_percentuale: parseNum(g('iva_percentuale')),
@@ -258,6 +259,8 @@
     var c = d.cliente || {};
     ['nome', 'indirizzo', 'codice_fiscale_piva', 'telefono'].forEach(function (k) { form.elements['cliente.' + k].value = c[k] || ''; });
     form.elements.cantiere.value = d.cantiere || '';
+    if (d.cliente_id) form.dataset.clienteId = d.cliente_id; else delete form.dataset.clienteId;
+    statoCliente(d.cliente_id ? 'Cliente dalla rubrica' : '', !!d.cliente_id);
     form.elements.iva_percentuale.value = d.iva_percentuale != null && [4, 10, 22].indexOf(d.iva_percentuale) > -1 ? String(d.iva_percentuale) : '';
     form.elements.note.value = d.note || '';
     if (d.totale_scritto != null) form.dataset.totaleScritto = d.totale_scritto; else delete form.dataset.totaleScritto;
@@ -307,6 +310,100 @@
     clearDraft();
     cancellaFoto().then(function () { location.reload(); });
   });
+
+  /* ---------- rubrica clienti ----------
+     Salvata nel browser (rubrica.js), con file di esportazione dalla
+     pagina Clienti: la ricerca è istantanea e non serve la rete. */
+  var clienti = null;
+  function caricaClienti() {
+    clienti = window.Rubrica.lista();
+    return Promise.resolve();
+  }
+  var norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+  function statoCliente(t, ok) { var el = $('#stato-cliente'); el.textContent = t || ''; el.classList.toggle('ok', !!ok); }
+
+  var cerca = $('#cerca-cliente'), lista = $('#lista-clienti'), trovati = [], attivo = -1;
+  function mostraLista(apri) {
+    lista.hidden = !apri;
+    cerca.setAttribute('aria-expanded', apri ? 'true' : 'false');
+  }
+  function filtra() {
+    var q = norm(cerca.value).trim();
+    lista.innerHTML = '';
+    attivo = -1;
+    trovati = clienti.filter(function (c) {
+      return !q || norm(c.nome + ' ' + c.telefono + ' ' + c.indirizzo).indexOf(q) > -1;
+    }).slice(0, 8);
+    if (!trovati.length) {
+      lista.innerHTML = '<li class="vuoto">' + (clienti.length ? 'Nessun cliente trovato.' : 'La rubrica è vuota: salva il primo cliente qui sotto.') + '</li>';
+      return mostraLista(true);
+    }
+    trovati.forEach(function (c, i) {
+      var li = document.createElement('li');
+      li.id = 'cli-' + i; li.setAttribute('role', 'option'); li.setAttribute('aria-selected', 'false');
+      var b = document.createElement('b'); b.textContent = c.nome;
+      var sp = document.createElement('span'); sp.textContent = [c.telefono, c.indirizzo].filter(Boolean).join(' · ');
+      li.appendChild(b); li.appendChild(sp);
+      li.addEventListener('mousedown', function (e) { e.preventDefault(); scegliCliente(c); });
+      lista.appendChild(li);
+    });
+    mostraLista(true);
+  }
+  function evidenzia(i) {
+    var items = lista.querySelectorAll('[role=option]');
+    if (!items.length) return;
+    attivo = (i + items.length) % items.length;
+    items.forEach(function (li, k) { li.setAttribute('aria-selected', k === attivo ? 'true' : 'false'); });
+    cerca.setAttribute('aria-activedescendant', items[attivo].id);
+    items[attivo].scrollIntoView({ block: 'nearest' });
+  }
+  function scegliCliente(c) {
+    ['nome', 'indirizzo', 'codice_fiscale_piva', 'telefono'].forEach(function (k) { form.elements['cliente.' + k].value = c[k] || ''; });
+    form.dataset.clienteId = c.id;
+    cerca.value = '';
+    mostraLista(false);
+    statoCliente('Cliente dalla rubrica', true);
+    aggiorna();
+  }
+  cerca.addEventListener('focus', function () { caricaClienti(); filtra(); });
+  cerca.addEventListener('input', filtra);
+  cerca.addEventListener('blur', function () { mostraLista(false); });
+  cerca.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (lista.hidden) filtra(); evidenzia(attivo + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); evidenzia(attivo - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (trovati[attivo]) scegliCliente(trovati[attivo]); }
+    else if (e.key === 'Escape') mostraLista(false);
+  });
+
+  /* Modifiche ai dati di un cliente della rubrica: si salvano solo su richiesta. */
+  form.addEventListener('input', function (e) {
+    if (/^cliente\./.test(e.target.name || '') && form.dataset.clienteId) statoCliente('Modificato: premi "Salva in rubrica" per aggiornarlo');
+  });
+  $('#salva-cliente').addEventListener('click', function () {
+    var d = leggiForm().cliente;
+    if (!d.nome) { statoCliente('Scrivi almeno il nome del cliente.'); form.elements['cliente.nome'].focus(); return; }
+    var id = form.dataset.clienteId;
+    caricaClienti();
+    var prima = (clienti || []).filter(function (c) { return c.id === id; })[0] || {};
+    var cliente = Object.assign({}, prima, d, id ? { id: id } : {}); // email e note della rubrica restano
+    try {
+      var salvato = window.Rubrica.salva(cliente);
+      form.dataset.clienteId = salvato.id;
+      caricaClienti();
+      statoCliente(id ? 'Rubrica aggiornata ✓' : 'Salvato in rubrica ✓', true);
+      saveDraft();
+    } catch (e) { statoCliente(e.message); }
+  });
+
+  /* Arrivo dalla rubrica con "Nuovo conto": /admin/?cliente=ID */
+  var daRubrica = new URLSearchParams(location.search).get('cliente');
+  if (daRubrica) {
+    caricaClienti().then(function () {
+      var c = (clienti || []).filter(function (x) { return x.id === daRubrica; })[0];
+      history.replaceState(null, '', '/admin/');
+      if (c) apriEditor({ cliente: c, cliente_id: c.id, voci: [{}] });
+    });
+  }
 
   /* ---------- PDF: una sola funzione per anteprima e download ---------- */
   function creaPdf() {

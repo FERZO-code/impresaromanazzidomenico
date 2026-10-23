@@ -15,12 +15,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=7">
+<link rel="stylesheet" href="/assets/css/admin.css?v=10">
 </head>
 <body>
 <header class="a-bar">
   <div class="a-bar-in">
     <a class="a-brand" href="/admin/"><img src="/assets/img/brand/logo-rd.png" alt="" width="40" height="40"><span><b>Romanazzi Domenico</b><small>Conti e preventivi</small></span></a>
+    <nav class="a-nav" aria-label="Sezioni"><a href="/admin/" aria-current="page">Conti</a><a href="/admin/clienti.html">Clienti</a></nav>
     <form method="post" action="/api/logout"><button class="btn btn--ghost-inv" type="submit">Esci</button></form>
   </div>
 </header>
@@ -84,11 +85,22 @@
 
         <div class="tile grid" style="gap:16px">
           <h2>Cliente</h2>
+          <div class="picker" id="picker">
+            <label class="field"><span>Cerca tra i clienti salvati</span>
+              <input type="search" id="cerca-cliente" placeholder="Nome, telefono o indirizzo" autocomplete="off"
+                role="combobox" aria-expanded="false" aria-controls="lista-clienti" aria-autocomplete="list">
+            </label>
+            <ul class="picker-list" id="lista-clienti" role="listbox" hidden></ul>
+          </div>
           <div class="grid grid-2">
             <label class="field"><span>Nome e cognome / ragione sociale</span><input name="cliente.nome" autocomplete="off"></label>
             <label class="field"><span>Telefono</span><input name="cliente.telefono" inputmode="tel" autocomplete="off"></label>
             <label class="field"><span>Indirizzo</span><input name="cliente.indirizzo" autocomplete="off"></label>
             <label class="field"><span>Codice fiscale / P.IVA</span><input name="cliente.codice_fiscale_piva" autocomplete="off"></label>
+          </div>
+          <div class="actions">
+            <button class="btn" type="button" id="salva-cliente">Salva in rubrica</button>
+            <span class="stato" id="stato-cliente" aria-live="polite"></span>
           </div>
           <label class="field"><span>Cantiere (se diverso dall'indirizzo del cliente)</span><input name="cantiere" autocomplete="off"></label>
         </div>
@@ -159,6 +171,7 @@
   </div>
   <iframe id="anteprima-frame" title="Anteprima del PDF"></iframe>
 </dialog>
+<script src="/admin/rubrica.js"></script>
 <script src="/admin/app.js"></script>
 </body>
 </html>
