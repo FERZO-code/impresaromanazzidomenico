@@ -352,7 +352,8 @@ def page(title, desc, current, body, og="bagno-lavabi-01", ld="", head_extra="")
 <meta property="og:locale" content="it_IT">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/img/brand/logo-rd.png">
-<link rel="apple-touch-icon" href="assets/img/brand/logo-rd.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Romanazzi">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="%s" onload="this.onload=null;this.rel='stylesheet'">
