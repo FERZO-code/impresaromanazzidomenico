@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Accesso | Romanazzi Domenico</title>
+<link rel="icon" href="/assets/img/brand/logo-rd.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
+<link rel="stylesheet" href="/assets/css/admin.css?v=2">
+</head>
+<body>
+<header class="a-bar">
+  <div class="a-bar-in">
+    <a class="a-brand" href="/"><img src="/assets/img/brand/logo-rd.png" alt="" width="40" height="40"><span><b>Romanazzi Domenico</b><small>Area riservata</small></span></a>
+  </div>
+</header>
+<main class="login">
+  <form class="tile" method="post" action="/api/login">
+    <div>
+      <p class="label">Area riservata</p>
+      <h1>Accedi</h1>
+    </div>
+    <p class="alert error" id="msg-errore" hidden role="alert">Password sbagliata. Riprova.</p>
+    <p class="alert" id="msg-uscito" hidden role="status">Sei uscito dall'area riservata.</p>
+    <label class="field"><span>Password</span>
+      <input type="password" name="password" autocomplete="current-password" required autofocus>
+    </label>
+    <button class="btn btn--flare" type="submit">Entra</button>
+  </form>
+</main>
+<script>
+  var q = new URLSearchParams(location.search);
+  if (q.has('errore')) document.getElementById('msg-errore').hidden = false;
+  if (q.has('uscito')) document.getElementById('msg-uscito').hidden = false;
+</script>
+</body>
+</html>

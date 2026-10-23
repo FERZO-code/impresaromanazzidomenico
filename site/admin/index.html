@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Conti e preventivi | Romanazzi Domenico</title>
+<link rel="icon" href="/assets/img/brand/logo-rd.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
+<link rel="stylesheet" href="/assets/css/admin.css?v=2">
+</head>
+<body>
+<header class="a-bar">
+  <div class="a-bar-in">
+    <a class="a-brand" href="/admin/"><img src="/assets/img/brand/logo-rd.png" alt="" width="40" height="40"><span><b>Romanazzi Domenico</b><small>Conti e preventivi</small></span></a>
+    <form method="post" action="/api/logout"><button class="btn btn--ghost-inv" type="submit">Esci</button></form>
+  </div>
+</header>
+
+<main class="a-wrap">
+  <!-- 1. foto -->
+  <section id="step-foto" class="grid" style="gap:24px">
+    <div>
+      <p class="label">Passo 1 di 2</p>
+      <h1>Dal foglio<br>al PDF.</h1>
+      <p class="muted" style="max-width:56ch">Fotografa il conto scritto a penna, dall'alto e con buona luce. Le cifre vengono lette in automatico: nel passo successivo le ricontrolli prima di creare il PDF.</p>
+    </div>
+    <div class="tile grid" style="gap:16px">
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="image/*">
+        <b>Scatta o scegli la foto</b>
+        <span class="muted">JPG, PNG o foto del telefono</span>
+      </label>
+      <img id="preview" class="preview" alt="Anteprima del conto caricato" hidden>
+      <p class="alert error" id="err-foto" hidden role="alert"></p>
+      <div class="actions">
+        <button class="btn btn--flare" id="leggi" type="button" disabled>Leggi il conto</button>
+        <button class="btn" id="vuoto" type="button">Compila a mano</button>
+        <button class="btn" id="riprendi" type="button" hidden>Riprendi la bozza</button>
+      </div>
+      <div class="wait" id="wait" role="status" aria-live="polite">
+        <span class="wait-tiles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>Sto leggendo il conto: può servire fino a un minuto.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. controllo -->
+  <section id="step-dati" hidden>
+    <p class="label">Passo 2 di 2</p>
+    <h1 style="margin-bottom:24px">Controlla e crea il PDF.</h1>
+    <div class="editor">
+      <form id="form" class="grid" style="gap:24px" novalidate>
+        <div class="alert" id="dubbi" hidden></div>
+
+        <div class="tile grid" style="gap:16px">
+          <h2>Documento</h2>
+          <div class="seg" role="radiogroup" aria-label="Tipo di documento">
+            <label><input type="radio" name="tipo" value="preventivo" checked><span>Preventivo</span></label>
+            <label><input type="radio" name="tipo" value="conto"><span>Conto lavori</span></label>
+          </div>
+          <div class="grid grid-2">
+            <label class="field"><span>Numero</span><input name="numero" placeholder="es. 12/2026"></label>
+            <label class="field"><span>Data</span><input name="data" type="date"></label>
+          </div>
+        </div>
+
+        <div class="tile grid" style="gap:16px">
+          <h2>Cliente</h2>
+          <div class="grid grid-2">
+            <label class="field"><span>Nome e cognome / ragione sociale</span><input name="cliente.nome" autocomplete="off"></label>
+            <label class="field"><span>Telefono</span><input name="cliente.telefono" inputmode="tel" autocomplete="off"></label>
+            <label class="field"><span>Indirizzo</span><input name="cliente.indirizzo" autocomplete="off"></label>
+            <label class="field"><span>Codice fiscale / P.IVA</span><input name="cliente.codice_fiscale_piva" autocomplete="off"></label>
+          </div>
+          <label class="field"><span>Cantiere (se diverso dall'indirizzo del cliente)</span><input name="cantiere" autocomplete="off"></label>
+        </div>
+
+        <div class="tile grid" style="gap:16px">
+          <h2>Voci</h2>
+          <table class="voci">
+            <thead><tr><th style="width:44%">Descrizione</th><th>U.M.</th><th>Q.tà</th><th>Prezzo €</th><th>Importo €</th><th><span class="visually-hidden">Rimuovi</span></th></tr></thead>
+            <tbody id="righe"></tbody>
+          </table>
+          <div class="actions"><button class="btn" type="button" id="aggiungi">+ Aggiungi voce</button></div>
+          <p class="muted" style="margin:0;font-size:.9rem">L'importo si calcola da quantità × prezzo. Per le voci "a corpo" lascia vuoti quantità e prezzo e scrivi solo l'importo.</p>
+          <div class="grid grid-2" style="align-items:end">
+            <label class="field"><span>IVA</span>
+              <select name="iva_percentuale">
+                <option value="">Nessuna (importi IVA esclusa)</option>
+                <option value="4">4%</option>
+                <option value="10">10% (ristrutturazioni)</option>
+                <option value="22">22%</option>
+              </select>
+            </label>
+            <div class="tot" id="totali" aria-live="polite"></div>
+          </div>
+          <p class="alert" id="diff" hidden></p>
+        </div>
+
+        <div class="tile grid" style="gap:16px">
+          <h2>Note</h2>
+          <label class="field"><span>Note, pagamento, validità</span><textarea name="note"></textarea></label>
+        </div>
+
+        <p class="alert error" id="err-pdf" hidden role="alert"></p>
+        <div class="actions">
+          <button class="btn btn--flare" type="submit" id="crea">Scarica il PDF</button>
+          <button class="btn" type="button" id="nuovo">Nuovo conto</button>
+        </div>
+      </form>
+
+      <aside class="side" id="side" hidden>
+        <p class="label">Foto originale</p>
+        <img id="side-img" alt="Foto del conto scritto a mano, per il confronto">
+      </aside>
+    </div>
+  </section>
+</main>
+<script src="/admin/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Dipendenze: Vercel le reinstalla da package.json / package-lock.json
+node_modules/
+
+# Segreti e configurazione locale
+.env
+.env.*
+.vercel/
+.claude/settings.local.json
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# Foto originali ad alta risoluzione (centinaia di MB): restano sul computer.
+# Le versioni ottimizzate usate dal sito sono in site/assets/img/photos/.
+_foto-originali/
+
+# Backup delle versioni precedenti e materiale del vecchio sito:
+# la cronologia ora è in git.
+_versione-1/
+_versione-2/
+_sorgenti-originali/
+
+# Cache Python del generatore
+__pycache__/
+*.pyc
