@@ -308,13 +308,10 @@
     cancellaFoto().then(function () { location.reload(); });
   });
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var dati = leggiForm(), err = $('#err-pdf');
-    errore(err);
-    if (!dati.voci.length) { errore(err, 'Aggiungi almeno una voce.'); return; }
-    var btn = $('#crea');
-    btn.disabled = true; btn.textContent = 'Creo il PDF…';
+  /* ---------- PDF: una sola funzione per anteprima e download ---------- */
+  function creaPdf() {
+    var dati = leggiForm();
+    if (!dati.voci.length) return Promise.reject(new Error('Aggiungi almeno una voce.'));
     dati.foto = fotoLavori.map(function (f) { return { src: f.src, didascalia: f.didascalia || '' }; });
     /* Vercel accetta richieste fino a 4,5 MB: se le foto superano il
        limite le riduciamo ancora, solo per questo invio. */
@@ -328,23 +325,67 @@
         if (c.length >= 4.2e6) throw new Error('Troppe foto per un solo PDF: rimuovine qualcuna e riprova.');
         return c;
       });
-    pronto.then(function (body) {
+    return pronto.then(function (body) {
       return fetch('/api/pdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-    })
-      .then(function (res) {
-        if (!res || sessioneScaduta(res)) return null;
-        if (res.status === 413) throw new Error('Le foto sono troppo pesanti per un solo PDF: rimuovine qualcuna.');
-        if (!res.ok) return res.json().then(function (j) { throw new Error(j.errore || 'Errore ' + res.status); });
-        var nome = (/filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '') || [])[1] || 'conto.pdf';
-        return res.blob().then(function (b) {
-          var a = document.createElement('a');
-          a.href = URL.createObjectURL(b);
-          a.download = nome;
-          document.body.appendChild(a); a.click(); a.remove();
-          setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
-        });
-      })
-      .catch(function (e2) { errore(err, e2.message || 'Il PDF non è stato creato. Riprova.'); })
-      .then(function () { btn.disabled = false; btn.textContent = 'Scarica il PDF'; });
+    }).then(function (res) {
+      if (sessioneScaduta(res)) return new Promise(function () {}); // si va al login
+      if (res.status === 413) throw new Error('Le foto sono troppo pesanti per un solo PDF: rimuovine qualcuna.');
+      if (!res.ok) return res.json().then(function (j) { throw new Error(j.errore || 'Errore ' + res.status); });
+      var nome = (/filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '') || [])[1] || 'conto.pdf';
+      return res.blob().then(function (b) { return { url: URL.createObjectURL(b), nome: nome }; });
+    });
+  }
+
+  function scarica(pdf) {
+    var a = document.createElement('a');
+    a.href = pdf.url; a.download = pdf.nome;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  /* Pulsante occupato mentre il PDF si crea; gli altri restano fermi. */
+  function conPulsante(btn, testo, lavoro) {
+    var err = $('#err-pdf'), prima = btn.textContent;
+    errore(err);
+    $('#crea').disabled = $('#anteprima').disabled = true;
+    btn.textContent = testo;
+    return lavoro().catch(function (e) { errore(err, e.message || 'Il PDF non è stato creato. Riprova.'); })
+      .then(function () { $('#crea').disabled = $('#anteprima').disabled = false; btn.textContent = prima; });
+  }
+
+  var ultimo = null; // l'ultimo PDF creato, per liberarne la memoria
+  function tieni(pdf) { if (ultimo) URL.revokeObjectURL(ultimo.url); ultimo = pdf; return pdf; }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    conPulsante($('#crea'), 'Creo il PDF…', function () { return creaPdf().then(tieni).then(scarica); });
   });
+
+  /* Anteprima. Sul computer: finestra sopra il modulo con il PDF, da
+     stampare o scaricare. Su iPhone, iPad e Android un PDF dentro la pagina
+     mostra solo la prima pagina (o niente), quindi si apre nel visualizzatore
+     del telefono, che ha già Stampa e Condividi. La scheda va aperta subito, al tocco:
+     aperta dopo l'attesa verrebbe bloccata come popup. */
+  var IOS = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var dlg = $('#anteprima-dlg'), frame = $('#anteprima-frame');
+  $('#anteprima').addEventListener('click', function () {
+    var scheda = IOS ? window.open('', '_blank') : null;
+    conPulsante($('#anteprima'), 'Preparo l\'anteprima…', function () {
+      return creaPdf().then(tieni).then(function (pdf) {
+        if (IOS) {
+          if (scheda) scheda.location.href = pdf.url; else location.href = pdf.url;
+          return;
+        }
+        frame.src = pdf.url;
+        $('#anteprima-nome').textContent = pdf.nome;
+        dlg.showModal();
+      }).catch(function (e) { if (scheda) scheda.close(); throw e; });
+    });
+  });
+  $('#anteprima-stampa').addEventListener('click', function () {
+    try { frame.contentWindow.focus(); frame.contentWindow.print(); }
+    catch (e) { window.open(ultimo.url, '_blank'); } // se il browser non stampa da qui, il PDF in una scheda
+  });
+  $('#anteprima-scarica').addEventListener('click', function () { if (ultimo) scarica(ultimo); });
+  $('#anteprima-chiudi').addEventListener('click', function () { dlg.close(); });
+  dlg.addEventListener('close', function () { frame.src = 'about:blank'; $('#anteprima').focus(); });
 })();

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=4">
+<link rel="stylesheet" href="/assets/css/admin.css?v=7">
 </head>
 <body>
 <header class="a-bar">
@@ -43,7 +43,6 @@
       <p class="alert error" id="err-foto" hidden role="alert"></p>
       <div class="actions">
         <button class="btn btn--flare" id="leggi" type="button" disabled>Leggi il conto</button>
-        <button class="btn" id="vuoto" type="button">Compila a mano</button>
         <button class="btn" id="riprendi" type="button" hidden>Riprendi la bozza</button>
       </div>
       <div class="wait" id="wait" role="status" aria-live="polite">
@@ -51,6 +50,16 @@
         <span>Sto leggendo il conto: può servire fino a un minuto.</span>
       </div>
     </div>
+
+    <p class="or" aria-hidden="true"><span>oppure</span></p>
+
+    <button class="alt" id="vuoto" type="button">
+      <span class="alt-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+      </span>
+      <span class="alt-txt"><b>Compila a mano</b><span>Senza foto: scrivi tu cliente, voci e prezzi.</span></span>
+      <span class="alt-arrow" aria-hidden="true">→</span>
+    </button>
   </section>
 
   <!-- 2. controllo -->
@@ -125,6 +134,7 @@
 
         <p class="alert error" id="err-pdf" hidden role="alert"></p>
         <div class="actions">
+          <button class="btn btn--ink" type="button" id="anteprima">Anteprima</button>
           <button class="btn btn--flare" type="submit" id="crea">Scarica il PDF</button>
           <button class="btn" type="button" id="nuovo">Nuovo conto</button>
         </div>
@@ -137,6 +147,18 @@
     </div>
   </section>
 </main>
+
+<dialog class="pv" id="anteprima-dlg" aria-labelledby="anteprima-nome">
+  <div class="pv-bar">
+    <p class="pv-title"><span class="label" style="margin:0">Anteprima</span><span id="anteprima-nome"></span></p>
+    <div class="actions">
+      <button class="btn btn--flare" type="button" id="anteprima-stampa">Stampa</button>
+      <button class="btn" type="button" id="anteprima-scarica">Scarica</button>
+      <button class="btn btn--ghost-inv" type="button" id="anteprima-chiudi">Chiudi</button>
+    </div>
+  </div>
+  <iframe id="anteprima-frame" title="Anteprima del PDF"></iframe>
+</dialog>
 <script src="/admin/app.js"></script>
 </body>
 </html>
