@@ -30,20 +30,21 @@
 
   /* La foto del telefono pesa diversi MB: la riduciamo a 2000 px sul lato
      lungo, abbastanza per leggere la penna e sotto il limite di invio. */
-  function riduci(f) {
+  function riduci(f, lato, qualita) {
+    lato = lato || 2000; qualita = qualita || 0.88;
     return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(f);
+      var url = typeof f === 'string' ? f : URL.createObjectURL(f);
       var img = new Image();
       img.onload = function () {
-        var k = Math.min(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight));
+        var k = Math.min(1, lato / Math.max(img.naturalWidth, img.naturalHeight));
         var c = document.createElement('canvas');
         c.width = Math.round(img.naturalWidth * k);
         c.height = Math.round(img.naturalHeight * k);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
-        resolve(c.toDataURL('image/jpeg', 0.88));
+        if (typeof f !== 'string') URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', qualita));
       };
-      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('formato')); };
+      img.onerror = function () { if (typeof f !== 'string') URL.revokeObjectURL(url); reject(new Error('formato')); };
       img.src = url;
     });
   }
@@ -92,6 +93,82 @@
     $('#riprendi').hidden = false;
     $('#riprendi').addEventListener('click', function () { apriEditor(bozza, true); });
   }
+
+  /* ---------- foto dei lavori ----------
+     Restano nel browser (IndexedDB: la memoria locale normale è troppo
+     piccola per delle foto) finché non si inizia un nuovo conto. */
+  var MAX_FOTO = 24;
+  var fotoLavori = [];
+  function idb(mode, fn) {
+    return new Promise(function (resolve) {
+      try {
+        var req = indexedDB.open('rd-admin', 1);
+        req.onupgradeneeded = function () { req.result.createObjectStore('kv'); };
+        req.onsuccess = function () {
+          var tx = req.result.transaction('kv', mode), st = tx.objectStore('kv');
+          var r = fn(st);
+          tx.oncomplete = function () { resolve(r && r.result); };
+          tx.onerror = function () { resolve(null); };
+        };
+        req.onerror = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  }
+  var salvaFoto = function () { return idb('readwrite', function (st) { st.put(fotoLavori, 'foto'); }); };
+  var caricaFoto = function () { return idb('readonly', function (st) { return st.get('foto'); }); };
+  var cancellaFoto = function () { return idb('readwrite', function (st) { st.delete('foto'); }); };
+
+  var gal = $('#gal'), errGal = $('#err-gal');
+  function renderGal() {
+    gal.innerHTML = '';
+    fotoLavori.forEach(function (f, i) {
+      var li = document.createElement('li');
+      li.innerHTML =
+        '<div class="ph"><img alt=""><button class="del" type="button" aria-label="Rimuovi foto ' + (i + 1) + '">×</button></div>' +
+        '<input placeholder="Didascalia" aria-label="Didascalia foto ' + (i + 1) + '" maxlength="200">' +
+        '<div class="mv"><button type="button" data-mv="-1" aria-label="Sposta prima"' + (i === 0 ? ' disabled' : '') + '>←</button>' +
+        '<button type="button" data-mv="1" aria-label="Sposta dopo"' + (i === fotoLavori.length - 1 ? ' disabled' : '') + '>→</button></div>';
+      li.querySelector('img').src = f.src;
+      li.querySelector('input').value = f.didascalia || '';
+      li.dataset.i = i;
+      gal.appendChild(li);
+    });
+    $('#gal-info').textContent = fotoLavori.length ? fotoLavori.length + ' di ' + MAX_FOTO + ' foto' : '';
+  }
+  gal.addEventListener('input', function (e) {
+    var li = e.target.closest('li');
+    if (li && e.target.tagName === 'INPUT') { fotoLavori[+li.dataset.i].didascalia = e.target.value; salvaFoto(); }
+  });
+  gal.addEventListener('click', function (e) {
+    var li = e.target.closest('li'), b = e.target.closest('button');
+    if (!li || !b) return;
+    var i = +li.dataset.i;
+    if (b.classList.contains('del')) fotoLavori.splice(i, 1);
+    else if (b.dataset.mv) {
+      var j = i + Number(b.dataset.mv);
+      var t = fotoLavori[i]; fotoLavori[i] = fotoLavori[j]; fotoLavori[j] = t;
+    } else return;
+    renderGal(); salvaFoto();
+  });
+  $('#foto-lavori').addEventListener('change', function (e) {
+    var files = Array.prototype.slice.call(e.target.files || []);
+    e.target.value = '';
+    errore(errGal);
+    var posto = MAX_FOTO - fotoLavori.length;
+    if (files.length > posto) errore(errGal, 'Puoi aggiungere al massimo ' + MAX_FOTO + ' foto: ne ho aggiunte ' + Math.max(posto, 0) + '.');
+    var falliti = 0;
+    files.slice(0, Math.max(posto, 0)).reduce(function (p, f) {
+      return p.then(function () {
+        return riduci(f, 1200, 0.72).then(function (src) {
+          fotoLavori.push({ src: src, didascalia: '' });
+          renderGal();
+        }, function () { falliti++; });
+      });
+    }, Promise.resolve()).then(function () {
+      if (falliti) errore(errGal, falliti === 1 ? 'Una foto non si è aperta (le HEIC si aprono solo dal telefono).' : falliti + ' foto non si sono aperte (le HEIC si aprono solo dal telefono).');
+      salvaFoto();
+    });
+  });
 
   /* ---------- 2. editor ---------- */
   var form = $('#form'), righe = $('#righe');
@@ -196,6 +273,11 @@
       dubbi.hidden = false;
     } else dubbi.hidden = true;
 
+    fotoLavori = [];
+    renderGal();
+    if (daBozza) caricaFoto().then(function (f) { if (Array.isArray(f)) { fotoLavori = f; renderGal(); } });
+    else cancellaFoto();
+
     $('#side').hidden = !foto;
     if (foto) $('#side-img').src = foto;
     $('#step-foto').hidden = true;
@@ -223,7 +305,7 @@
   $('#nuovo').addEventListener('click', function () {
     if (!confirm('Iniziare un nuovo conto? I dati inseriti qui verranno cancellati.')) return;
     clearDraft();
-    location.reload();
+    cancellaFoto().then(function () { location.reload(); });
   });
 
   form.addEventListener('submit', function (e) {
@@ -233,9 +315,25 @@
     if (!dati.voci.length) { errore(err, 'Aggiungi almeno una voce.'); return; }
     var btn = $('#crea');
     btn.disabled = true; btn.textContent = 'Creo il PDF…';
-    fetch('/api/pdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dati) })
+    dati.foto = fotoLavori.map(function (f) { return { src: f.src, didascalia: f.didascalia || '' }; });
+    /* Vercel accetta richieste fino a 4,5 MB: se le foto superano il
+       limite le riduciamo ancora, solo per questo invio. */
+    var corpo = JSON.stringify(dati);
+    var pronto = corpo.length < 4.2e6 ? Promise.resolve(corpo) :
+      Promise.all(dati.foto.map(function (f) {
+        return riduci(f.src, 900, 0.6).then(function (src) { return { src: src, didascalia: f.didascalia }; });
+      })).then(function (ff) {
+        dati.foto = ff;
+        var c = JSON.stringify(dati);
+        if (c.length >= 4.2e6) throw new Error('Troppe foto per un solo PDF: rimuovine qualcuna e riprova.');
+        return c;
+      });
+    pronto.then(function (body) {
+      return fetch('/api/pdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
+    })
       .then(function (res) {
-        if (sessioneScaduta(res)) return null;
+        if (!res || sessioneScaduta(res)) return null;
+        if (res.status === 413) throw new Error('Le foto sono troppo pesanti per un solo PDF: rimuovine qualcuna.');
         if (!res.ok) return res.json().then(function (j) { throw new Error(j.errore || 'Errore ' + res.status); });
         var nome = (/filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '') || [])[1] || 'conto.pdf';
         return res.blob().then(function (b) {

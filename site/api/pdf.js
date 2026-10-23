@@ -5,6 +5,14 @@ import { buildPdf } from "./_lib/pdf.js";
 const str = (v, max = 2000) => (typeof v === "string" ? v.slice(0, max) : "");
 const n = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
+/* Foto dei lavori: arrivano come data URL già ridotti dal browser. */
+const MAX_FOTO = 24;
+function leggiFoto(f) {
+  const m = f && typeof f.src === "string" && f.src.match(/^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/);
+  if (!m) return null;
+  return { tipo: m[1] === "png" ? "png" : "jpg", bytes: Buffer.from(m[2], "base64"), didascalia: str(f.didascalia, 200) };
+}
+
 export async function POST(request) {
   if (!(await isLoggedIn(request))) return Response.json({ errore: "Sessione scaduta: accedi di nuovo." }, { status: 401 });
   const b = await request.json().catch(() => null);
@@ -23,9 +31,16 @@ export async function POST(request) {
     })),
     iva_percentuale: n(b.iva_percentuale),
     note: str(b.note, 4000),
+    foto: (Array.isArray(b.foto) ? b.foto : []).slice(0, MAX_FOTO).map(leggiFoto).filter(Boolean),
   };
 
-  const bytes = await buildPdf(dati);
+  let bytes;
+  try {
+    bytes = await buildPdf(dati);
+  } catch (err) {
+    console.error(err);
+    return Response.json({ errore: "Una delle foto non è leggibile: rimuovila e riprova." }, { status: 422 });
+  }
   const nome = `${dati.tipo === "conto" ? "Conto" : "Preventivo"}${dati.numero ? "-" + dati.numero.replace(/[^\w-]+/g, "-") : ""}-${(dati.cliente.nome || "cliente").replace(/[^\wÀ-ú]+/g, "-")}.pdf`;
   return new Response(bytes, {
     headers: {

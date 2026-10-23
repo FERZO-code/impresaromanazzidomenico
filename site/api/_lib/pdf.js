@@ -234,6 +234,40 @@ export async function buildPdf(d) {
   firma(M, "Per l'impresa");
   firma(W - M - 200, d.tipo === "conto" ? "Il cliente" : "Per accettazione, il cliente");
 
+  /* ---------- galleria: le foto dei lavori, due per riga ----------
+     Ogni foto sta in una piastrella color marmo e mantiene le sue
+     proporzioni: verticali e orizzontali convivono senza tagli. */
+  const foto = d.foto || [];
+  if (foto.length) {
+    const GAP = 14, COLS = 2, ROWS = 3;
+    const cw = (W - 2 * M - GAP) / COLS, bh = 172, ch = bh + 34;
+    let n = 0;
+    for (const f of foto) {
+      if (n % (COLS * ROWS) === 0) {
+        newPage(false);
+        text("FOTO DEI LAVORI", M, y - 20, { font: bold, size: 18 });
+        rect(M, y - 30, 34, 4, FLARE);
+        text(foto.length === 1 ? "1 foto" : `${foto.length} foto`, W - M, y - 20, { size: 9, color: ASH, align: "right" });
+        y -= 52;
+      }
+      const col = n % COLS, row = Math.floor((n % (COLS * ROWS)) / COLS);
+      const x = M + col * (cw + GAP), top = y - row * ch;
+      rect(x, top - bh, cw, bh, MARBLE);
+      const img = f.tipo === "png" ? await doc.embedPng(f.bytes) : await doc.embedJpg(f.bytes);
+      const k = Math.min((cw - 8) / img.width, (bh - 8) / img.height);
+      const iw = img.width * k, ih = img.height * k;
+      page.drawImage(img, { x: x + (cw - iw) / 2, y: top - bh + (bh - ih) / 2, width: iw, height: ih });
+      let cap = wrap(reg, f.didascalia || "", 8.5, cw);
+      if (cap.length > 2) { // due righe al massimo: la terza diventa "…"
+        let l = cap[1];
+        while (l && reg.widthOfTextAtSize(l + "…", 8.5) > cw) l = l.slice(0, -1);
+        cap = [cap[0], l.trimEnd() + "…"];
+      }
+      cap.forEach((l, j) => text(l, x, top - bh - 13 - j * 11, { size: 8.5, color: ASH }));
+      n++;
+    }
+  }
+
   /* ---------- piè di pagina: fila di piastrelle e numero di pagina ---------- */
   pages.forEach((p, i) => {
     page = p;

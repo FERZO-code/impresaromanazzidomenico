@@ -376,3 +376,4 @@ Note:
 - Il PDF usa Helvetica: i caratteri fuori dall'alfabeto latino (per esempio le emoji) vengono tolti.
 - `robots.txt` esclude /admin/ e /api/, e le pagine hanno `noindex`.
 - La bozza in corso resta salvata nel browser fino a "Nuovo conto".
+- **Foto dei lavori**: nel modulo si possono aggiungere fino a 24 foto, con didascalia e ordine modificabile. Nel PDF compaiono dopo le firme in pagine "Foto dei lavori", due per riga e sei per pagina, senza tagli (verticali e orizzontali dentro piastrelle color marmo). Il browser riduce le foto a 1200 px. Se tutte insieme superano il limite di 4,5 MB per richiesta di Vercel, per quell'invio vengono ridotte ancora. Restano salvate nel browser (IndexedDB) insieme alla bozza. Esempio: `docs/esempio-conto-foto.pdf`.
