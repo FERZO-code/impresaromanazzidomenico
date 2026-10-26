@@ -310,6 +310,11 @@ LD = """<script type="application/ld+json">
    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Esecuzione di massetti"}},
    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Impermeabilizzazione di superfici"}},
    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Posa di gres laminato a grande formato"}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","@id":"%(u)s#sito",
+ "name":"Impresa Romanazzi Domenico","alternateName":"Romanazzi Domenico",
+ "url":"%(u)s","inLanguage":"it-IT","publisher":{"@id":"%(u)s#impresa"}}
 </script>""" % {"u": SITE_URL, "t1": TEL_D, "t2": TEL_G, "e": EMAIL, "ig": IG_PROFILE}
 
 # Deciso prima del primo disegno, così la pagina non lampeggia sotto l'apertura.

@@ -379,3 +379,18 @@ Note:
 - **Clienti**: la pagina `/admin/clienti.html` è la rubrica. Permette di cercare, aggiungere, modificare ed eliminare i clienti, e con "Nuovo conto" apre il modulo con il cliente già compilato. Nel modulo del conto, il campo "Cerca tra i clienti salvati" compila i dati del cliente scelto; "Salva in rubrica" crea il cliente o aggiorna quello scelto, conservando email e note, che non vanno nel PDF. **Nessun database**: la rubrica è salvata nel browser del dispositivo (`localStorage`, codice in `admin/rubrica.js`). Con **Esporta file** si scarica `clienti-rd.json`, con **Importa file** lo si carica su un altro dispositivo. L'importazione unisce i dati senza cancellare niente: per lo stesso cliente vince la modifica più recente. Il file contiene dati personali dei clienti: va tenuto in un posto privato (es. iCloud Drive), mai nel repository. Cancellando i dati del browser, o usando la navigazione privata, la rubrica si perde, quindi conviene esportarla ogni tanto.
 - **Anteprima**: il pulsante "Anteprima" crea il PDF senza scaricarlo. Su computer lo mostra in una finestra sopra il modulo, con Stampa, Scarica e Chiudi. Su iPhone, iPad e Android lo apre nel visualizzatore PDF del telefono, perché lì un PDF dentro la pagina mostrerebbe solo la prima pagina; da quel visualizzatore si stampa o si condivide con Condividi.
 - **Foto dei lavori**: nel modulo si possono aggiungere fino a 24 foto, con didascalia e ordine modificabile. Nel PDF compaiono dopo le firme in pagine "Foto dei lavori", due per riga e sei per pagina, senza tagli (verticali e orizzontali dentro piastrelle color marmo). Il browser riduce le foto a 1200 px. Se tutte insieme superano il limite di 4,5 MB per richiesta di Vercel, per quell'invio vengono ridotte ancora. Restano salvate nel browser (IndexedDB) insieme alla bozza. Esempio: `docs/esempio-conto-foto.pdf`.
+
+
+## Risultati estesi su Google (sitelink)
+
+L'elenco con le pagine interne sotto il risultato principale lo decide Google: non esiste un'impostazione per attivarlo. Il sito gli dà tutti gli elementi che usa per costruirlo:
+- **Struttura chiara.** Menu e piè di pagina collegano da ogni pagina le 4 lavorazioni, Lavori, Impresa e Contatti.
+- **Titoli brevi e diversi per ogni pagina.** Google li usa come titoli dei sitelink.
+- **Dati strutturati.** `WebSite` (nome del sito, alternativa "Romanazzi Domenico") e `HomeAndConstructionBusiness` in home, `BreadcrumbList` e `Service` nelle pagine interne.
+- **`sitemap.xml`** con le 8 pagine e **canonical** su `https://www.impresaromanazzidomenico.it/`.
+
+Da fare fuori dal codice:
+1. **Vercel → Settings → Domains.** Il dominio principale deve essere `www.impresaromanazzidomenico.it` e quello senza www deve reindirizzare lì (308), così Google vede un solo sito, coerente con i canonical.
+2. **Google Search Console.** Aggiungere la proprietà di tipo *Dominio* (verifica tramite record DNS) e inviare `sitemap.xml`. Poi, con *Controllo URL*, chiedere l'indicizzazione della home e delle pagine interne.
+3. **Profilo dell'attività su Google (Maps)**, con il sito collegato: rafforza le ricerche per nome.
+I sitelink compaiono di solito quando qualcuno cerca il nome dell'impresa, dopo alcune settimane dall'indicizzazione.
