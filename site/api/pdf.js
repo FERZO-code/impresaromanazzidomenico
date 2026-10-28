@@ -35,6 +35,7 @@ export async function POST(request) {
     totale_manuale: n(b.totale_manuale),
     oneri_sicurezza: n(b.oneri_sicurezza),
     iva_percentuale: n(b.iva_percentuale),
+    acconti: (Array.isArray(b.acconti) ? b.acconti : []).slice(0, 20).map((a) => ({ descrizione: str(a.descrizione, 100), data: str(a.data, 10), importo: n(a.importo) })),
     condizioni: (Array.isArray(b.condizioni) ? b.condizioni : []).slice(0, 30).map((c) => str(c, 500)),
     note: str(b.note, 4000),
     foto: (Array.isArray(b.foto) ? b.foto : []).slice(0, MAX_FOTO).map(leggiFoto).filter(Boolean),

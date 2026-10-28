@@ -66,7 +66,10 @@ export function totali(d) {
   const imponibile = round2(lavori + oneri);
   const aliquota = isNum(d.iva_percentuale) ? d.iva_percentuale : null;
   const iva = aliquota === null ? 0 : round2(imponibile * aliquota / 100);
-  return { lavori, oneri, imponibile, aliquota, iva, totale: round2(imponibile + iva) };
+  const totale = round2(imponibile + iva);
+  const acconti = (d.acconti || []).filter((a) => isNum(a.importo) && a.importo > 0);
+  const versato = round2(acconti.reduce((s, a) => s + a.importo, 0));
+  return { lavori, oneri, imponibile, aliquota, iva, totale, acconti, versato, saldo: round2(totale - versato) };
 }
 
 export const CONDIZIONI_PREDEFINITE = [
@@ -261,7 +264,8 @@ export async function buildPdf(d) {
   const condH = condizioni.length ? 38 + (condizioni.length - 1) * 18 + 15 : 0;
   const righeTot = [["Totale lavori", euro(t.lavori)], ["Oneri per la sicurezza", euro(t.oneri)]];
   if (t.aliquota !== null) righeTot.push([`IVA ${qta(t.aliquota)}%`, euro(t.iva)]);
-  const totH = righeTot.length * 29 + 1 + 54;
+  /* acconti già versati: righe sotto il totale e un secondo blocco "da saldare" */
+  const totH = righeTot.length * 29 + 1 + 54 + (t.acconti.length ? t.acconti.length * 29 + 55 : 0);
   const bloccoH = Math.max(condH, totH);
   if (y + bloccoH > LIMIT) { footer(FOOT_RULE); newPage(); y = TOP; }
   if (condizioni.length) {
@@ -280,6 +284,20 @@ export async function buildPdf(d) {
   text("TOTALE", 501, by + 29, { f: "cond", size: 20, color: C.white, ls: 20 * 0.02 });
   text(t.aliquota === null ? "IVA ESCLUSA" : "IVA INCLUSA", 501, by + 44, { f: "semibold", size: 9.06, color: C.ivaNote, ls: 9.06 * 0.1 });
   text(euro(t.totale), 733, by + 35, { f: "cond", size: 20, color: C.flare, align: "right" });
+  if (t.acconti.length) {
+    t.acconti.forEach((a, i) => {
+      const ay = by + 54 + i * 29;
+      const nome = a.descrizione || ("Acconto" + (a.data ? " del " + dataIt(a.data) : ""));
+      text(nome, 499, ay + 19, { size: 12.66 });
+      text("− " + euro(a.importo), 733, ay + 19, { size: 12.66, align: "right" });
+      box(491, ay + 28, 250, 1, C.rule);
+    });
+    const sy = by + 54 + t.acconti.length * 29 + 1;
+    box(491, sy, 250, 54, C.ink);
+    text("DA SALDARE", 501, sy + 29, { f: "cond", size: 20, color: C.white, ls: 20 * 0.02 });
+    text("AL NETTO DEGLI ACCONTI", 501, sy + 44, { f: "semibold", size: 9.06, color: C.ivaNote, ls: 9.06 * 0.1 });
+    text(euro(t.saldo), 733, sy + 35, { f: "cond", size: 20, color: C.flare, align: "right" });
+  }
   y += bloccoH;
 
   /* ---------- note ---------- */

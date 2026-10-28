@@ -206,3 +206,12 @@ h2 { font-size: 1.6rem; }
 .cond li { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
 .cond textarea { width: 100%; min-height: 44px; padding: 8px 10px; border: 2px solid var(--rule); resize: vertical; field-sizing: content; }
 .cond textarea:focus { border-color: var(--ink); outline: none; }
+
+/* ---------- acconti ---------- */
+.acc { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.acc:empty { display: none; }
+.acc li { display: grid; grid-template-columns: 150px 1fr 130px auto; gap: 8px; }
+.acc input { min-height: 44px; padding: 8px 10px; border: 2px solid var(--rule); width: 100%; }
+.acc input:focus { border-color: var(--ink); outline: none; }
+.acc input[inputmode="decimal"] { text-align: right; }
+@media (max-width: 600px) { .acc li { grid-template-columns: 1fr 1fr auto; } .acc li input:nth-child(2) { grid-column: 1 / -1; grid-row: 2; } }

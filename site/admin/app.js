@@ -205,6 +205,36 @@
   });
   $('#cond-aggiungi').addEventListener('click', function () { addCondizione('').querySelector('textarea').focus(); });
 
+  /* ---------- acconti: data, descrizione facoltativa, importo ---------- */
+  var accList = $('#acc-list');
+  function addAcconto(a) {
+    a = a || {};
+    var li = document.createElement('li');
+    li.innerHTML = '<input type="date" aria-label="Data dell\'acconto">' +
+      '<input placeholder="Descrizione (facoltativa)" aria-label="Descrizione dell\'acconto" autocomplete="off">' +
+      '<input inputmode="decimal" placeholder="Importo €" aria-label="Importo dell\'acconto" autocomplete="off">' +
+      '<button class="del" type="button" aria-label="Rimuovi acconto">×</button>';
+    var f = li.querySelectorAll('input');
+    f[0].value = a.data || new Date().toISOString().slice(0, 10);
+    f[1].value = a.descrizione || '';
+    f[2].value = fmtNum(a.importo);
+    accList.appendChild(li);
+    return li;
+  }
+  function setAcconti(arr) { accList.innerHTML = ''; arr.forEach(addAcconto); }
+  function getAcconti() {
+    return Array.prototype.map.call(accList.children, function (li) {
+      var f = li.querySelectorAll('input');
+      return { data: f[0].value, descrizione: f[1].value.trim(), importo: parseNum(f[2].value) };
+    }).filter(function (a) { return a.importo; });
+  }
+  accList.addEventListener('click', function (e) {
+    if (!e.target.closest('.del')) return;
+    e.target.closest('li').remove();
+    aggiorna();
+  });
+  $('#acc-aggiungi').addEventListener('click', function () { addAcconto().querySelectorAll('input')[2].focus(); });
+
   function piu30(iso) {
     var d = iso ? new Date(iso + 'T12:00:00') : new Date();
     d.setDate(d.getDate() + 30);
@@ -262,6 +292,7 @@
       oneri_sicurezza: parseNum(g('oneri_sicurezza')),
       iva_percentuale: parseNum(g('iva_percentuale')),
       condizioni: getCondizioni(),
+      acconti: getAcconti(),
       note: form.elements.note.value.trim(),
       totale_scritto: form.dataset.totaleScritto ? Number(form.dataset.totaleScritto) : null,
     };
@@ -297,6 +328,13 @@
       '<div><span>Oneri per la sicurezza</span><span>' + EUR.format(oneri) + '</span></div>' +
       (al == null ? '' : '<div><span>IVA ' + fmtNum(al) + '%</span><span>' + EUR.format(iva) + '</span></div>') +
       '<div class="big"><span>Totale ' + (al == null ? 'IVA esclusa' : 'IVA inclusa') + '</span><b>' + EUR.format(tot) + '</b></div>';
+    var acc = getAcconti();
+    if (acc.length) {
+      var versato = r2(acc.reduce(function (s2, a) { return s2 + a.importo; }, 0));
+      $('#totali').innerHTML +=
+        '<div><span>Acconti versati</span><span>− ' + EUR.format(versato) + '</span></div>' +
+        '<div class="big"><span>Da saldare</span><b>' + EUR.format(r2(tot - versato)) + '</b></div>';
+    }
     $('#campo-validita').hidden = leggiForm().tipo === 'conto';
 
     /* confronto con il totale scritto a penna: se non torna, va guardato */
@@ -329,6 +367,7 @@
       : (!daBozza && senzaPrezzi && d.totale_scritto != null ? d.totale_scritto : null));
     form.elements.oneri_sicurezza.value = fmtNum(d.oneri_sicurezza != null ? d.oneri_sicurezza : 0);
     setCondizioni(d.condizioni && d.condizioni.length ? d.condizioni : condizioniPredefinite());
+    setAcconti(d.acconti || []);
     if (d.cliente_id) form.dataset.clienteId = d.cliente_id; else delete form.dataset.clienteId;
     statoCliente(d.cliente_id ? 'Cliente dalla rubrica' : '', !!d.cliente_id);
     form.elements.iva_percentuale.value = d.iva_percentuale != null && [4, 10, 22].indexOf(d.iva_percentuale) > -1 ? String(d.iva_percentuale) : '';

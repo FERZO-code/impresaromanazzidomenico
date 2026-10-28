@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=12">
+<link rel="stylesheet" href="/assets/css/admin.css?v=13">
 </head>
 <body>
 <header class="a-bar">
@@ -132,6 +132,11 @@
             <div class="tot" id="totali" aria-live="polite"></div>
           </div>
           <p class="alert" id="diff" hidden></p>
+          <div class="grid" style="gap:10px">
+            <p class="label" style="margin:0">Acconti già versati</p>
+            <ul class="acc" id="acc-list"></ul>
+            <div class="actions"><button class="btn" type="button" id="acc-aggiungi">+ Aggiungi acconto</button></div>
+          </div>
         </div>
 
         <div class="tile grid" style="gap:16px">
