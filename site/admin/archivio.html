@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Archivio | Romanazzi Domenico</title>
+<link rel="icon" href="/assets/img/brand/logo-rd.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Conti RD">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0B0B0B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
+<link rel="stylesheet" href="/assets/css/admin.css?v=14">
+</head>
+<body>
+<header class="a-bar">
+  <div class="a-bar-in">
+    <a class="a-brand" href="/admin/"><img src="/assets/img/brand/logo-rd.png" alt="" width="40" height="40"><span><b>Romanazzi Domenico</b><small>Archivio</small></span></a>
+    <nav class="a-nav" aria-label="Sezioni"><a href="/admin/">Nuovo</a><a href="/admin/archivio.html" aria-current="page">Archivio</a><a href="/admin/clienti.html">Clienti</a></nav>
+    <form method="post" action="/api/logout"><button class="btn btn--ghost-inv" type="submit">Esci</button></form>
+  </div>
+</header>
+
+<main class="a-wrap">
+  <p class="label">Preventivi e conti</p>
+  <h1>Archivio.</h1>
+
+  <div class="toolbar">
+    <label class="field"><span>Cerca</span><input type="search" id="q" placeholder="Cliente o oggetto" autocomplete="off"></label>
+    <div class="seg" role="radiogroup" aria-label="Filtra per tipo">
+      <label><input type="radio" name="f" value="" checked><span>Tutti</span></label>
+      <label><input type="radio" name="f" value="preventivo"><span>Preventivi</span></label>
+      <label><input type="radio" name="f" value="conto"><span>Conti</span></label>
+    </div>
+    <a class="btn btn--flare" href="/admin/">+ Nuovo</a>
+  </div>
+
+  <p class="alert error" id="err" hidden role="alert"></p>
+  <p class="muted" id="conteggio" aria-live="polite"></p>
+  <ul class="rubrica" id="lista"></ul>
+</main>
+<script src="/admin/rubrica.js"></script>
+<script src="/admin/archivio.js"></script>
+</body>
+</html>

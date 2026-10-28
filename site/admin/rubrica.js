@@ -1,79 +1,59 @@
-/* Rubrica clienti salvata nel browser di questo dispositivo, con
-   esportazione e importazione in un file JSON (clienti-rd.json).
-   Niente server: i dati dei clienti non lasciano il telefono o il
-   computer, se non nel file che esporti tu. */
+/* Rubrica clienti nell'archivio online (database Neon, tramite /api/clienti):
+   gli stessi clienti dal telefono e dal computer. Restano l'esportazione
+   in un file JSON come copia di sicurezza e l'importazione, anche dei
+   clienti salvati in passato nel browser di questo dispositivo. */
 (function () {
   'use strict';
-  var KEY = 'rd-rubrica';
+  var VECCHIA = 'rd-rubrica'; // dove stavano i clienti prima del database
 
-  function leggi() {
-    try { var v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; }
-    catch (e) { return []; }
-  }
-  function scrivi(lista) {
-    try { localStorage.setItem(KEY, JSON.stringify(lista)); }
-    catch (e) { throw new Error('Il browser non permette di salvare (navigazione privata?): esporta il file per non perdere i dati.'); }
-  }
-  var ordina = function (l) { return l.sort(function (a, b) { return a.nome.localeCompare(b.nome, 'it', { sensitivity: 'base' }); }); };
-  var nuovoId = function () { return (crypto.randomUUID && crypto.randomUUID()) || Date.now().toString(36) + Math.random().toString(36).slice(2); };
-  var s = function (v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : ''; };
-
-  function pulisci(c) {
-    return {
-      id: s(c.id, 60) || nuovoId(),
-      nome: s(c.nome, 200),
-      indirizzo: s(c.indirizzo, 300),
-      codice_fiscale_piva: s(c.codice_fiscale_piva, 40),
-      telefono: s(c.telefono, 40),
-      email: s(c.email, 200),
-      note: s(c.note, 2000),
-      aggiornato: c.aggiornato || new Date().toISOString(),
-    };
+  function api(method, url, body) {
+    return fetch(url, { method: method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
+      .then(function (res) {
+        if (res.status === 401) { location.href = '/admin/login.html'; return new Promise(function () {}); }
+        return res.json().then(function (j) { if (!res.ok) throw new Error(j.errore || 'Errore ' + res.status); return j; });
+      });
   }
 
+  window.Api = api;
   window.Rubrica = {
-    lista: function () { return ordina(leggi()); },
-
+    lista: function () { return api('GET', '/api/clienti').then(function (j) { return j.clienti; }); },
     salva: function (c) {
-      if (!s(c.nome, 200)) throw new Error('Il nome del cliente è obbligatorio.');
-      var x = pulisci(Object.assign({}, c, { aggiornato: new Date().toISOString() }));
-      scrivi(leggi().filter(function (y) { return y.id !== x.id; }).concat(x));
-      return x;
+      if (!c.nome || !c.nome.trim()) return Promise.reject(new Error('Il nome del cliente è obbligatorio.'));
+      return api('POST', '/api/clienti', { cliente: c }).then(function (j) { return j.cliente; });
     },
+    elimina: function (id) { return api('DELETE', '/api/clienti?id=' + encodeURIComponent(id)); },
 
-    elimina: function (id) { scrivi(leggi().filter(function (y) { return y.id !== id; })); },
-
-    /* Scarica clienti-rd.json con tutta la rubrica. */
+    /* copia di sicurezza: clienti-rd.json */
     esporta: function () {
-      var dati = { tipo: 'rubrica-rd', versione: 1, esportato: new Date().toISOString(), clienti: ordina(leggi()) };
-      var url = URL.createObjectURL(new Blob([JSON.stringify(dati, null, 2)], { type: 'application/json' }));
-      var a = document.createElement('a');
-      a.href = url; a.download = 'clienti-rd.json';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
-      return dati.clienti.length;
+      return this.lista().then(function (clienti) {
+        var dati = { tipo: 'rubrica-rd', versione: 1, esportato: new Date().toISOString(), clienti: clienti };
+        var url = URL.createObjectURL(new Blob([JSON.stringify(dati, null, 2)], { type: 'application/json' }));
+        var a = document.createElement('a');
+        a.href = url; a.download = 'clienti-rd.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        return clienti.length;
+      });
     },
-
-    /* Unisce un file esportato alla rubrica: per lo stesso cliente vince
-       la versione modificata più di recente, così importare il file del
-       telefono sul computer (e viceversa) non cancella niente. */
     importa: function (file) {
       return file.text().then(function (t) {
         var j;
         try { j = JSON.parse(t); } catch (e) { throw new Error('Il file non è una rubrica valida.'); }
-        var arrivati = Array.isArray(j) ? j : j && j.clienti;
-        if (!Array.isArray(arrivati)) throw new Error('Il file non è una rubrica valida.');
-        var mappa = {};
-        leggi().forEach(function (c) { mappa[c.id] = c; });
-        var nuovi = 0, aggiornati = 0;
-        arrivati.forEach(function (raw) {
-          if (!raw || !s(raw.nome, 200)) return;
-          var c = pulisci(raw), prima = mappa[c.id];
-          if (!prima) { mappa[c.id] = c; nuovi++; }
-          else if ((c.aggiornato || '') > (prima.aggiornato || '')) { mappa[c.id] = c; aggiornati++; }
-        });
-        scrivi(Object.keys(mappa).map(function (k) { return mappa[k]; }));
-        return { nuovi: nuovi, aggiornati: aggiornati };
+        var clienti = Array.isArray(j) ? j : j && j.clienti;
+        if (!Array.isArray(clienti)) throw new Error('Il file non è una rubrica valida.');
+        return api('POST', '/api/clienti', { clienti: clienti }).then(function (r) { return r.importati; });
+      });
+    },
+
+    /* clienti rimasti nel browser dalla versione senza database */
+    vecchi: function () {
+      try { var v = JSON.parse(localStorage.getItem(VECCHIA) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+    },
+    trasferisciVecchi: function () {
+      var v = this.vecchi();
+      return api('POST', '/api/clienti', { clienti: v }).then(function (r) {
+        try { localStorage.removeItem(VECCHIA); } catch (e) { /* niente */ }
+        return r.importati;
       });
     },
   };

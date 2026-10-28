@@ -15,13 +15,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=13">
+<link rel="stylesheet" href="/assets/css/admin.css?v=14">
 </head>
 <body>
 <header class="a-bar">
   <div class="a-bar-in">
     <a class="a-brand" href="/admin/"><img src="/assets/img/brand/logo-rd.png" alt="" width="40" height="40"><span><b>Romanazzi Domenico</b><small>Conti e preventivi</small></span></a>
-    <nav class="a-nav" aria-label="Sezioni"><a href="/admin/" aria-current="page">Conti</a><a href="/admin/clienti.html">Clienti</a></nav>
+    <nav class="a-nav" aria-label="Sezioni"><a href="/admin/" aria-current="page">Nuovo</a><a href="/admin/archivio.html">Archivio</a><a href="/admin/clienti.html">Clienti</a></nav>
     <form method="post" action="/api/logout"><button class="btn btn--ghost-inv" type="submit">Esci</button></form>
   </div>
 </header>
@@ -69,6 +69,7 @@
     <h1 style="margin-bottom:24px">Controlla e crea il PDF.</h1>
     <div class="editor">
       <form id="form" class="grid" style="gap:24px" novalidate>
+        <p class="stato" id="stato-doc" aria-live="polite" style="margin:0"></p>
         <div class="alert" id="dubbi" hidden></div>
 
         <div class="tile grid" style="gap:16px">
@@ -172,6 +173,7 @@
         <div class="actions">
           <button class="btn btn--ink" type="button" id="anteprima">Anteprima</button>
           <button class="btn btn--flare" type="submit" id="crea">Scarica il PDF</button>
+          <button class="btn" type="button" id="salva-doc">Salva nell'archivio</button>
           <button class="btn" type="button" id="nuovo">Nuovo conto</button>
         </div>
       </form>

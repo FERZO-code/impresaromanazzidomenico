@@ -52,25 +52,8 @@ export function dataIt(iso) {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
 }
 
-/* Importo di riga: quantità × prezzo quando ci sono entrambi, altrimenti
-   l'importo scritto (le voci "a corpo" hanno spesso solo quello). */
-export function importoVoce(v) {
-  if (isNum(v.quantita) && isNum(v.prezzo_unitario)) return round2(v.quantita * v.prezzo_unitario);
-  return isNum(v.importo) ? round2(v.importo) : 0;
-}
-
-export function totali(d) {
-  const somma = round2((d.voci || []).reduce((s, v) => s + importoVoce(v), 0));
-  const lavori = isNum(d.totale_manuale) ? round2(d.totale_manuale) : somma;
-  const oneri = isNum(d.oneri_sicurezza) ? round2(d.oneri_sicurezza) : 0;
-  const imponibile = round2(lavori + oneri);
-  const aliquota = isNum(d.iva_percentuale) ? d.iva_percentuale : null;
-  const iva = aliquota === null ? 0 : round2(imponibile * aliquota / 100);
-  const totale = round2(imponibile + iva);
-  const acconti = (d.acconti || []).filter((a) => isNum(a.importo) && a.importo > 0);
-  const versato = round2(acconti.reduce((s, a) => s + a.importo, 0));
-  return { lavori, oneri, imponibile, aliquota, iva, totale, acconti, versato, saldo: round2(totale - versato) };
-}
+export { importoVoce, totali } from "./documento.js";
+import { importoVoce, totali } from "./documento.js";
 
 export const CONDIZIONI_PREDEFINITE = [
   "I prezzi si intendono validi per il periodo indicato nel presente preventivo e esclusi di IVA.",

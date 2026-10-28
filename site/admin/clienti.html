@@ -15,13 +15,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=13">
+<link rel="stylesheet" href="/assets/css/admin.css?v=14">
 </head>
 <body>
 <header class="a-bar">
   <div class="a-bar-in">
     <a class="a-brand" href="/admin/"><img src="/assets/img/brand/logo-rd.png" alt="" width="40" height="40"><span><b>Romanazzi Domenico</b><small>Rubrica clienti</small></span></a>
-    <nav class="a-nav" aria-label="Sezioni"><a href="/admin/">Conti</a><a href="/admin/clienti.html" aria-current="page">Clienti</a></nav>
+    <nav class="a-nav" aria-label="Sezioni"><a href="/admin/">Nuovo</a><a href="/admin/archivio.html">Archivio</a><a href="/admin/clienti.html" aria-current="page">Clienti</a></nav>
     <form method="post" action="/api/logout"><button class="btn btn--ghost-inv" type="submit">Esci</button></form>
   </div>
 </header>
@@ -36,11 +36,15 @@
   </div>
 
   <p class="alert error" id="err" hidden role="alert"></p>
+  <div class="alert" id="vecchi" hidden style="margin-bottom:24px">
+    <p style="margin:0 0 10px"><b></b>, da prima che ci fosse l'archivio online.</p>
+    <button class="btn btn--flare" type="button" id="trasferisci">Sposta nell'archivio</button>
+  </div>
   <p class="muted" id="conteggio" aria-live="polite"></p>
   <ul class="rubrica" id="rubrica"></ul>
 
   <div class="tile grid filebox" style="gap:12px;margin-top:32px">
-    <p style="margin:0"><b>La rubrica è salvata su questo dispositivo.</b> <span class="muted">Per averla anche sull'altro (telefono o computer) o per farne una copia di sicurezza, esporta il file e importalo dall'altra parte: i clienti vengono uniti, non sostituiti.</span></p>
+    <p style="margin:0"><b>Copia di sicurezza.</b> <span class="muted">I clienti sono nell'archivio online, uguali su telefono e computer. Puoi comunque scaricarne una copia in un file, o importare un file esportato in passato.</span></p>
     <div class="actions">
       <button class="btn" type="button" id="esporta">Esporta file</button>
       <label class="btn" for="importa-file">Importa file</label>

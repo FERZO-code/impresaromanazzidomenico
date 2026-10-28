@@ -36,7 +36,10 @@
     });
   }
 
-  function carica() { clienti = window.Rubrica.lista(); render(); }
+  function carica() {
+    return window.Rubrica.lista().then(function (l) { clienti = l; render(); })
+      .catch(function (e) { errore($('#err'), e.message); });
+  }
   q.addEventListener('input', render);
 
   /* ---------- modifica ---------- */
@@ -59,39 +62,51 @@
     var c = { id: corrente ? corrente.id : undefined };
     CAMPI.forEach(function (k) { c[k] = f.elements[k].value.trim(); });
     if (!c.nome) { errore($('#dlg-err'), 'Il nome è obbligatorio.'); f.elements.nome.focus(); return; }
-    try {
-      window.Rubrica.salva(c);
-      carica();
-      dlg.close();
-    } catch (e2) { errore($('#dlg-err'), e2.message); }
+    var btn = $('#dlg-salva'); btn.disabled = true;
+    window.Rubrica.salva(c).then(function () { dlg.close(); return carica(); })
+      .catch(function (e2) { errore($('#dlg-err'), e2.message); })
+      .then(function () { btn.disabled = false; });
   });
 
   $('#dlg-elimina').addEventListener('click', function () {
     if (!corrente || !confirm('Eliminare ' + corrente.nome + ' dalla rubrica? I PDF già creati non cambiano.')) return;
-    window.Rubrica.elimina(corrente.id);
-    carica();
-    dlg.close();
+    window.Rubrica.elimina(corrente.id).then(function () { dlg.close(); return carica(); })
+      .catch(function (e) { errore($('#dlg-err'), e.message); });
   });
 
   /* ---------- file della rubrica ---------- */
   var info = $('#file-info');
   $('#esporta').addEventListener('click', function () {
-    var n = window.Rubrica.esporta();
-    info.textContent = 'Scaricato clienti-rd.json (' + n + (n === 1 ? ' cliente' : ' clienti') + '). Conservalo in un posto sicuro, per esempio iCloud Drive.';
+    window.Rubrica.esporta().then(function (n) {
+      info.textContent = 'Scaricato clienti-rd.json (' + n + (n === 1 ? ' cliente' : ' clienti') + '). È una copia di sicurezza: i clienti restano comunque nell\'archivio.';
+    }).catch(function (e) { errore($('#err'), e.message); });
   });
   $('#importa-file').addEventListener('change', function (e) {
     var file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
     errore($('#err'));
-    window.Rubrica.importa(file).then(function (r) {
-      carica();
-      var n = function (k, uno, piu) { return k + ' ' + (k === 1 ? uno : piu); };
-      info.textContent = r.nuovi || r.aggiornati
-        ? 'Importati: ' + n(r.nuovi, 'cliente nuovo', 'clienti nuovi') + (r.aggiornati ? ', ' + n(r.aggiornati, 'aggiornato', 'aggiornati') : '') + '.'
-        : 'Nessuna novità: la rubrica era già aggiornata.';
+    window.Rubrica.importa(file).then(function (n) {
+      info.textContent = 'Importati ' + n + (n === 1 ? ' cliente.' : ' clienti.');
+      return carica();
     }).catch(function (e2) { errore($('#err'), e2.message); });
   });
+
+  /* clienti salvati nel browser prima del database: si portano nell'archivio con un tocco */
+  var vecchi = window.Rubrica.vecchi();
+  if (vecchi.length) {
+    var box = $('#vecchi');
+    box.querySelector('b').textContent = vecchi.length + (vecchi.length === 1 ? ' cliente salvato' : ' clienti salvati') + ' su questo dispositivo';
+    box.hidden = false;
+    $('#trasferisci').addEventListener('click', function () {
+      this.disabled = true;
+      window.Rubrica.trasferisciVecchi().then(function (n) {
+        box.hidden = true;
+        info.textContent = 'Spostati nell\'archivio ' + n + (n === 1 ? ' cliente.' : ' clienti.');
+        return carica();
+      }).catch(function (e) { errore($('#err'), e.message); this.disabled = false; }.bind(this));
+    });
+  }
 
   carica();
 })();

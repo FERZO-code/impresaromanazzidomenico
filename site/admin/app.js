@@ -283,6 +283,7 @@
       numero: g('numero'), data: g('data'),
       cliente: { nome: g('cliente.nome'), indirizzo: g('cliente.indirizzo'), codice_fiscale_piva: g('cliente.codice_fiscale_piva'), telefono: g('cliente.telefono') },
       cliente_id: form.dataset.clienteId || '',
+      doc_id: form.dataset.docId || '',
       cantiere: g('cantiere'),
       oggetto: g('oggetto'),
       valido_fino: g('valido_fino'),
@@ -369,6 +370,8 @@
     setCondizioni(d.condizioni && d.condizioni.length ? d.condizioni : condizioniPredefinite());
     setAcconti(d.acconti || []);
     if (d.cliente_id) form.dataset.clienteId = d.cliente_id; else delete form.dataset.clienteId;
+    if (daBozza && d.doc_id) form.dataset.docId = d.doc_id; else delete form.dataset.docId;
+    statoDoc(form.dataset.docId ? 'Documento dell\'archivio: le modifiche si salvano con "Salva nell\'archivio" o scaricando il PDF.' : '');
     statoCliente(d.cliente_id ? 'Cliente dalla rubrica' : '', !!d.cliente_id);
     form.elements.iva_percentuale.value = d.iva_percentuale != null && [4, 10, 22].indexOf(d.iva_percentuale) > -1 ? String(d.iva_percentuale) : '';
     form.elements.note.value = d.note || '';
@@ -385,9 +388,10 @@
       dubbi.hidden = false;
     } else dubbi.hidden = true;
 
-    fotoLavori = [];
+    fotoLavori = d._daArchivio ? (d.foto || []).slice() : [];
     renderGal();
-    if (daBozza) caricaFoto().then(function (f) { if (Array.isArray(f)) { fotoLavori = f; renderGal(); } });
+    if (d._daArchivio) salvaFoto();
+    else if (daBozza) caricaFoto().then(function (f) { if (Array.isArray(f)) { fotoLavori = f; renderGal(); } });
     else cancellaFoto();
 
     $('#side').hidden = !foto;
@@ -432,12 +436,12 @@
   });
 
   /* ---------- rubrica clienti ----------
-     Salvata nel browser (rubrica.js), con file di esportazione dalla
-     pagina Clienti: la ricerca è istantanea e non serve la rete. */
-  var clienti = null;
+     L'elenco arriva dall'archivio online una volta, all'apertura della
+     ricerca; poi si cerca qui nel browser, senza aspettare a ogni lettera. */
+  var clienti = null, clientiErr = '';
   function caricaClienti() {
-    clienti = window.Rubrica.lista();
-    return Promise.resolve();
+    return window.Rubrica.lista().then(function (l) { clienti = l; clientiErr = ''; })
+      .catch(function (e) { clienti = []; clientiErr = e.message; });
   }
   var norm = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
   function statoCliente(t, ok) { var el = $('#stato-cliente'); el.textContent = t || ''; el.classList.toggle('ok', !!ok); }
@@ -451,6 +455,8 @@
     var q = norm(cerca.value).trim();
     lista.innerHTML = '';
     attivo = -1;
+    if (clienti === null) { lista.innerHTML = '<li class="vuoto">Carico la rubrica…</li>'; return mostraLista(true); }
+    if (clientiErr) { lista.innerHTML = ''; var li0 = document.createElement('li'); li0.className = 'vuoto'; li0.textContent = clientiErr; lista.appendChild(li0); return mostraLista(true); }
     trovati = clienti.filter(function (c) {
       return !q || norm(c.nome + ' ' + c.telefono + ' ' + c.indirizzo).indexOf(q) > -1;
     }).slice(0, 8);
@@ -485,7 +491,7 @@
     statoCliente('Cliente dalla rubrica', true);
     aggiorna();
   }
-  cerca.addEventListener('focus', function () { caricaClienti(); filtra(); });
+  cerca.addEventListener('focus', function () { filtra(); caricaClienti().then(function () { if (document.activeElement === cerca) filtra(); }); });
   cerca.addEventListener('input', filtra);
   cerca.addEventListener('blur', function () { mostraLista(false); });
   cerca.addEventListener('keydown', function (e) {
@@ -502,17 +508,20 @@
   $('#salva-cliente').addEventListener('click', function () {
     var d = leggiForm().cliente;
     if (!d.nome) { statoCliente('Scrivi almeno il nome del cliente.'); form.elements['cliente.nome'].focus(); return; }
-    var id = form.dataset.clienteId;
-    caricaClienti();
-    var prima = (clienti || []).filter(function (c) { return c.id === id; })[0] || {};
-    var cliente = Object.assign({}, prima, d, id ? { id: id } : {}); // email e note della rubrica restano
-    try {
-      var salvato = window.Rubrica.salva(cliente);
+    var id = form.dataset.clienteId, btn = this;
+    btn.disabled = true;
+    statoCliente('Salvo…');
+    caricaClienti().then(function () {
+      var prima = (clienti || []).filter(function (c) { return c.id === id; })[0] || {};
+      var cliente = Object.assign({}, prima, d, id ? { id: id } : {}); // email e note della rubrica restano
+      return window.Rubrica.salva(cliente);
+    }).then(function (salvato) {
       form.dataset.clienteId = salvato.id;
-      caricaClienti();
+      clienti = null;
       statoCliente(id ? 'Rubrica aggiornata ✓' : 'Salvato in rubrica ✓', true);
       saveDraft();
-    } catch (e) { statoCliente(e.message); }
+    }).catch(function (e) { statoCliente(e.message); })
+      .then(function () { btn.disabled = false; });
   });
 
   /* Arrivo dalla rubrica con "Nuovo conto": /admin/?cliente=ID */
@@ -523,6 +532,40 @@
       history.replaceState(null, '', '/admin/');
       if (c) apriEditor({ cliente: c, cliente_id: c.id, voci: [{}] });
     });
+  }
+
+  /* ---------- archivio: salvataggio e riapertura dei documenti ---------- */
+  function statoDoc(t, ok) { var el = $('#stato-doc'); el.textContent = t || ''; el.classList.toggle('ok', !!ok); }
+  function salvaDocumento() {
+    var dati = leggiForm();
+    if (!dati.voci.length) return Promise.reject(new Error('Aggiungi almeno una voce prima di salvare.'));
+    dati.id = form.dataset.docId || undefined;
+    dati.foto = fotoLavori.map(function (f) { return { src: f.src, didascalia: f.didascalia || '' }; });
+    return window.Api('POST', '/api/documenti', dati).then(function (j) {
+      form.dataset.docId = j.documento.id;
+      saveDraft();
+      statoDoc('Salvato nell\'archivio alle ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) + ' ✓', true);
+      return j.documento;
+    });
+  }
+  $('#salva-doc').addEventListener('click', function () {
+    var btn = this; btn.disabled = true; errore($('#err-pdf'));
+    salvaDocumento().catch(function (e) { errore($('#err-pdf'), e.message); }).then(function () { btn.disabled = false; });
+  });
+  form.addEventListener('input', function () {
+    if (form.dataset.docId && $('#stato-doc').classList.contains('ok')) statoDoc('Modifiche non ancora salvate nell\'archivio.');
+  });
+
+  /* Riapertura dall'archivio: /admin/?doc=ID (con &copia=1 diventa un documento nuovo) */
+  var qs = new URLSearchParams(location.search), daArchivio = qs.get('doc');
+  if (daArchivio) {
+    window.Api('GET', '/api/documenti?id=' + encodeURIComponent(daArchivio)).then(function (j) {
+      var d = j.documento, copia = qs.get('copia');
+      history.replaceState(null, '', '/admin/');
+      if (copia) { d.data = new Date().toISOString().slice(0, 10); d.valido_fino = ''; d.acconti = []; }
+      apriEditor(Object.assign({}, d, { doc_id: copia ? '' : d.id, _daArchivio: true }), true);
+      statoDoc(copia ? 'Copia di un documento dell\'archivio: verrà salvata come documento nuovo.' : 'Aperto dall\'archivio. Le modifiche si salvano con "Salva nell\'archivio" o scaricando il PDF.', !copia);
+    }).catch(function (e) { errore($('#err-foto'), e.message); });
   }
 
   /* ---------- PDF: una sola funzione per anteprima e download ---------- */
@@ -574,7 +617,12 @@
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    conPulsante($('#crea'), 'Creo il PDF…', function () { return creaPdf().then(tieni).then(scarica); });
+    conPulsante($('#crea'), 'Creo il PDF…', function () {
+      /* il documento scaricato finisce anche nell'archivio; se il database
+         non risponde il PDF si scarica comunque */
+      return salvaDocumento().catch(function (e) { statoDoc('PDF creato, ma non salvato nell\'archivio: ' + e.message); })
+        .then(creaPdf).then(tieni).then(scarica);
+    });
   });
 
   /* Anteprima. Sul computer: finestra sopra il modulo con il PDF, da

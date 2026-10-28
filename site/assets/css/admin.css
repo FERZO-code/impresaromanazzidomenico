@@ -215,3 +215,4 @@ h2 { font-size: 1.6rem; }
 .acc input:focus { border-color: var(--ink); outline: none; }
 .acc input[inputmode="decimal"] { text-align: right; }
 @media (max-width: 600px) { .acc li { grid-template-columns: 1fr 1fr auto; } .acc li input:nth-child(2) { grid-column: 1 / -1; grid-row: 2; } }
+.card .label { font-size: .7rem; }

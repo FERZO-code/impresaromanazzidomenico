@@ -39,6 +39,7 @@ python3 -m http.server 8811 --directory site
   - `ADMIN_PASSWORD`: password dell'area `/admin`
   - `ADMIN_SESSION_SECRET`: stringa casuale di almeno 32 caratteri (`openssl rand -base64 48`)
   - `ANTHROPIC_API_KEY`: chiave della console Anthropic, usata per leggere le foto dei conti
+  - `DATABASE_URL`: la crea da sola l'integrazione **Neon** (Storage → Create Database → Neon) e serve all'archivio di preventivi e clienti
 
 Nessun segreto va scritto nel codice o committato: `.env*` è escluso da `.gitignore`.
 
