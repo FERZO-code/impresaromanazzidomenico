@@ -185,6 +185,26 @@
     var c = store(function (ls) { return JSON.parse(ls.getItem('rd-condizioni') || 'null'); });
     return Array.isArray(c) && c.length ? c : CONDIZIONI;
   }
+  /* elenco modificabile: una casella di testo per condizione */
+  var condList = $('#cond-list');
+  function addCondizione(t) {
+    var li = document.createElement('li');
+    li.innerHTML = '<textarea rows="2" aria-label="Condizione"></textarea><button class="del" type="button" aria-label="Rimuovi condizione">×</button>';
+    li.querySelector('textarea').value = t || '';
+    condList.appendChild(li);
+    return li;
+  }
+  function setCondizioni(arr) { condList.innerHTML = ''; arr.forEach(addCondizione); }
+  function getCondizioni() {
+    return Array.prototype.map.call(condList.querySelectorAll('textarea'), function (t) { return t.value.replace(/^\s*[-–•]\s*/, '').trim(); }).filter(Boolean);
+  }
+  condList.addEventListener('click', function (e) {
+    if (!e.target.closest('.del')) return;
+    e.target.closest('li').remove();
+    aggiorna();
+  });
+  $('#cond-aggiungi').addEventListener('click', function () { addCondizione('').querySelector('textarea').focus(); });
+
   function piu30(iso) {
     var d = iso ? new Date(iso + 'T12:00:00') : new Date();
     d.setDate(d.getDate() + 30);
@@ -241,7 +261,7 @@
       totale_manuale: parseNum(g('totale_manuale')),
       oneri_sicurezza: parseNum(g('oneri_sicurezza')),
       iva_percentuale: parseNum(g('iva_percentuale')),
-      condizioni: form.elements.condizioni.value.split('\n').map(function (c) { return c.replace(/^\s*[-–•]\s*/, '').trim(); }).filter(Boolean),
+      condizioni: getCondizioni(),
       note: form.elements.note.value.trim(),
       totale_scritto: form.dataset.totaleScritto ? Number(form.dataset.totaleScritto) : null,
     };
@@ -301,14 +321,14 @@
     form.elements.cantiere.value = d.cantiere || '';
     form.elements.oggetto.value = d.oggetto || '';
     form.elements.valido_fino.value = d.valido_fino || piu30(form.elements.data.value);
-    form.elements.mostra_prezzi.checked = !!d.mostra_prezzi;
+    form.elements.mostra_prezzi.checked = d.mostra_prezzi !== false; // prezzi visibili salvo scelta contraria
     /* foglio con sole quantità e un totale finale (come i preventivi RD):
        il totale scritto diventa il "totale lavori a corpo" */
     var senzaPrezzi = (d.voci || []).every(function (v) { return v.importo == null && v.prezzo_unitario == null; });
     form.elements.totale_manuale.value = fmtNum(d.totale_manuale != null ? d.totale_manuale
       : (!daBozza && senzaPrezzi && d.totale_scritto != null ? d.totale_scritto : null));
     form.elements.oneri_sicurezza.value = fmtNum(d.oneri_sicurezza != null ? d.oneri_sicurezza : 0);
-    form.elements.condizioni.value = (d.condizioni && d.condizioni.length ? d.condizioni : condizioniPredefinite()).join('\n');
+    setCondizioni(d.condizioni && d.condizioni.length ? d.condizioni : condizioniPredefinite());
     if (d.cliente_id) form.dataset.clienteId = d.cliente_id; else delete form.dataset.clienteId;
     statoCliente(d.cliente_id ? 'Cliente dalla rubrica' : '', !!d.cliente_id);
     form.elements.iva_percentuale.value = d.iva_percentuale != null && [4, 10, 22].indexOf(d.iva_percentuale) > -1 ? String(d.iva_percentuale) : '';
@@ -349,7 +369,7 @@
   });
   $('#cond-ripristina').addEventListener('click', function () {
     store(function (ls) { ls.removeItem('rd-condizioni'); });
-    form.elements.condizioni.value = CONDIZIONI.join('\n');
+    setCondizioni(CONDIZIONI);
     $('#stato-cond').textContent = 'Ripristinate le condizioni originali.';
     aggiorna();
   });

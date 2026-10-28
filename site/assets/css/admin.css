@@ -200,3 +200,9 @@ h2 { font-size: 1.6rem; }
 .check input { width: 22px; height: 22px; accent-color: var(--flare); }
 /* dettaglio sotto la descrizione della voce */
 .voci textarea.det { margin-top: 6px; min-height: 40px; font-size: .9rem; color: var(--ash); }
+
+/* ---------- condizioni generali modificabili ---------- */
+.cond { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.cond li { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+.cond textarea { width: 100%; min-height: 44px; padding: 8px 10px; border: 2px solid var(--rule); resize: vertical; field-sizing: content; }
+.cond textarea:focus { border-color: var(--ink); outline: none; }

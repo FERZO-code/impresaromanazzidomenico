@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=11">
+<link rel="stylesheet" href="/assets/css/admin.css?v=12">
 </head>
 <body>
 <header class="a-bar">
@@ -136,7 +136,9 @@
 
         <div class="tile grid" style="gap:16px">
           <h2>Condizioni generali</h2>
-          <label class="field"><span>Una condizione per riga</span><textarea name="condizioni" rows="7"></textarea></label>
+          <p class="muted" style="margin:0">Modifica il testo di ogni condizione, toglila con × o aggiungine di nuove. Finiscono nel PDF nell'ordine indicato.</p>
+          <ol class="cond" id="cond-list"></ol>
+          <div class="actions"><button class="btn" type="button" id="cond-aggiungi">+ Aggiungi condizione</button></div>
           <div class="actions">
             <button class="btn" type="button" id="cond-predefinite">Salva come predefinite</button>
             <button class="btn" type="button" id="cond-ripristina">Ripristina originali</button>
