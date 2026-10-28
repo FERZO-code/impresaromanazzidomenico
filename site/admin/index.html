@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=10">
+<link rel="stylesheet" href="/assets/css/admin.css?v=11">
 </head>
 <body>
 <header class="a-bar">
@@ -77,10 +77,12 @@
             <label><input type="radio" name="tipo" value="preventivo" checked><span>Preventivo</span></label>
             <label><input type="radio" name="tipo" value="conto"><span>Conto lavori</span></label>
           </div>
-          <div class="grid grid-2">
-            <label class="field"><span>Numero</span><input name="numero" placeholder="es. 12/2026"></label>
+          <div class="grid grid-3">
             <label class="field"><span>Data</span><input name="data" type="date"></label>
+            <label class="field" id="campo-validita"><span>Valido fino al</span><input name="valido_fino" type="date"></label>
+            <label class="field"><span>Numero (solo nel nome del file)</span><input name="numero" placeholder="es. 12/2026"></label>
           </div>
+          <label class="field"><span>Oggetto</span><input name="oggetto" placeholder="es. Ristrutturazione appartamento" autocomplete="off"></label>
         </div>
 
         <div class="tile grid" style="gap:16px">
@@ -102,7 +104,7 @@
             <button class="btn" type="button" id="salva-cliente">Salva in rubrica</button>
             <span class="stato" id="stato-cliente" aria-live="polite"></span>
           </div>
-          <label class="field"><span>Cantiere (se diverso dall'indirizzo del cliente)</span><input name="cantiere" autocomplete="off"></label>
+          <label class="field"><span>Luogo dei lavori (vuoto = indirizzo del cliente)</span><input name="cantiere" autocomplete="off"></label>
         </div>
 
         <div class="tile grid" style="gap:16px">
@@ -112,8 +114,12 @@
             <tbody id="righe"></tbody>
           </table>
           <div class="actions"><button class="btn" type="button" id="aggiungi">+ Aggiungi voce</button></div>
-          <p class="muted" style="margin:0;font-size:.9rem">L'importo si calcola da quantità × prezzo. Per le voci "a corpo" lascia vuoti quantità e prezzo e scrivi solo l'importo.</p>
+          <p class="muted" style="margin:0;font-size:.9rem">L'importo si calcola da quantità × prezzo. Per le voci "a corpo" lascia vuoti quantità e prezzo e scrivi solo l'importo. Il dettaglio, se c'è, va sotto la descrizione in grigio.</p>
+          <label class="check"><input type="checkbox" name="mostra_prezzi"> <span>Mostra prezzo e importo di ogni voce nel PDF</span></label>
           <div class="grid grid-2" style="align-items:end">
+            <div class="grid" style="gap:16px">
+            <label class="field"><span>Totale lavori a corpo € (vuoto = somma delle voci)</span><input name="totale_manuale" inputmode="decimal" autocomplete="off"></label>
+            <label class="field"><span>Oneri per la sicurezza €</span><input name="oneri_sicurezza" inputmode="decimal" value="0" autocomplete="off"></label>
             <label class="field"><span>IVA</span>
               <select name="iva_percentuale">
                 <option value="">Nessuna (importi IVA esclusa)</option>
@@ -122,14 +128,25 @@
                 <option value="22">22%</option>
               </select>
             </label>
+            </div>
             <div class="tot" id="totali" aria-live="polite"></div>
           </div>
           <p class="alert" id="diff" hidden></p>
         </div>
 
         <div class="tile grid" style="gap:16px">
+          <h2>Condizioni generali</h2>
+          <label class="field"><span>Una condizione per riga</span><textarea name="condizioni" rows="7"></textarea></label>
+          <div class="actions">
+            <button class="btn" type="button" id="cond-predefinite">Salva come predefinite</button>
+            <button class="btn" type="button" id="cond-ripristina">Ripristina originali</button>
+            <span class="stato" id="stato-cond" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="tile grid" style="gap:16px">
           <h2>Note</h2>
-          <label class="field"><span>Note, pagamento, validità</span><textarea name="note"></textarea></label>
+          <label class="field"><span>Note aggiuntive (facoltative, sotto le condizioni)</span><textarea name="note"></textarea></label>
         </div>
 
         <div class="tile grid" style="gap:16px">

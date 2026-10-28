@@ -358,7 +358,7 @@ File:
 - `middleware.js`: senza login, tutto ciò che sta sotto /admin rimanda alla pagina di accesso
 - `api/login.js`, `api/logout.js`: sessione con cookie firmato (12 ore), nessun database
 - `api/leggi-conto.js`: invia la foto a Claude e restituisce i dati in JSON
-- `api/pdf.js` + `api/_lib/pdf.js`: crea il PDF (pdf-lib)
+- `api/pdf.js` + `api/_lib/pdf.js`: crea il PDF (pdf-lib + fontkit), identico al modello "Preventivo - Coniugi Didonna.pdf": testata nera con logo, riquadro cliente / luogo dei lavori / date, oggetto, tabella con N., descrizione (con dettaglio in grigio), U.M. e Q.tà (prezzi per voce facoltativi), Condizioni Generali, totali con oneri per la sicurezza e firme. Caratteri Barlow e Barlow Condensed incorporati da `api/_lib/fonts/` (licenza OFL, file `OFL.txt`). Le misure del modello sono in px CSS e la larghezza delle lettere è arrotondata al pixel come fa Chrome, così righe e a capo coincidono.
 - `api/_lib/impresa.js`: **dati dell'impresa stampati sul PDF: inserire qui P.IVA e codice fiscale**
 - `vercel.json`: durata massima della lettura, redirect del vecchio sito e regole di cache (su Vercel il file `.htaccess` non viene usato)
 
@@ -373,12 +373,13 @@ Pubblicazione su Vercel:
 Note:
 - La lettura usa i fallback lato server di Anthropic (`fallbacks: "default"`): se il modello rifiuta una richiesta, ne subentra un altro in automatico.
 - Il costo è di pochi centesimi per foto. Le foto vengono ridotte a 2000 px prima dell'invio.
-- Il PDF usa Helvetica: i caratteri fuori dall'alfabeto latino (per esempio le emoji) vengono tolti.
+- Condizioni Generali: nel modulo, una per riga. "Salva come predefinite" le memorizza su quel dispositivo per i documenti successivi, "Ripristina originali" torna a quelle del modello. Se una voce del foglio ha solo le quantità, il totale scritto a penna diventa il "Totale lavori a corpo".
+- I caratteri che Barlow non contiene (per esempio le emoji) vengono tolti dal PDF.
 - `robots.txt` esclude /admin/ e /api/, e le pagine hanno `noindex`.
 - La bozza in corso resta salvata nel browser fino a "Nuovo conto".
 - **Clienti**: la pagina `/admin/clienti.html` è la rubrica. Permette di cercare, aggiungere, modificare ed eliminare i clienti, e con "Nuovo conto" apre il modulo con il cliente già compilato. Nel modulo del conto, il campo "Cerca tra i clienti salvati" compila i dati del cliente scelto; "Salva in rubrica" crea il cliente o aggiorna quello scelto, conservando email e note, che non vanno nel PDF. **Nessun database**: la rubrica è salvata nel browser del dispositivo (`localStorage`, codice in `admin/rubrica.js`). Con **Esporta file** si scarica `clienti-rd.json`, con **Importa file** lo si carica su un altro dispositivo. L'importazione unisce i dati senza cancellare niente: per lo stesso cliente vince la modifica più recente. Il file contiene dati personali dei clienti: va tenuto in un posto privato (es. iCloud Drive), mai nel repository. Cancellando i dati del browser, o usando la navigazione privata, la rubrica si perde, quindi conviene esportarla ogni tanto.
 - **Anteprima**: il pulsante "Anteprima" crea il PDF senza scaricarlo. Su computer lo mostra in una finestra sopra il modulo, con Stampa, Scarica e Chiudi. Su iPhone, iPad e Android lo apre nel visualizzatore PDF del telefono, perché lì un PDF dentro la pagina mostrerebbe solo la prima pagina; da quel visualizzatore si stampa o si condivide con Condividi.
-- **Foto dei lavori**: nel modulo si possono aggiungere fino a 24 foto, con didascalia e ordine modificabile. Nel PDF compaiono dopo le firme in pagine "Foto dei lavori", due per riga e sei per pagina, senza tagli (verticali e orizzontali dentro piastrelle color marmo). Il browser riduce le foto a 1200 px. Se tutte insieme superano il limite di 4,5 MB per richiesta di Vercel, per quell'invio vengono ridotte ancora. Restano salvate nel browser (IndexedDB) insieme alla bozza. Esempio: `docs/esempio-conto-foto.pdf`.
+- **Foto dei lavori**: nel modulo si possono aggiungere fino a 24 foto, con didascalia e ordine modificabile. Nel PDF compaiono dopo le firme in pagine "Foto dei lavori", due per riga e sei per pagina, senza tagli (verticali e orizzontali dentro piastrelle color marmo). Il browser riduce le foto a 1200 px. Se tutte insieme superano il limite di 4,5 MB per richiesta di Vercel, per quell'invio vengono ridotte ancora. Restano salvate nel browser (IndexedDB) insieme alla bozza. Esempio: `docs/esempio-conto.pdf` (dati di fantasia).
 
 
 ## Risultati estesi su Google (sitelink)

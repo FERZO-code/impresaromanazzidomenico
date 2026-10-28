@@ -194,3 +194,9 @@ h2 { font-size: 1.6rem; }
 .edit-dlg::backdrop { background: rgba(11, 11, 11, .72); }
 .edit-dlg form { padding: clamp(18px, 3vw, 28px); display: grid; gap: 16px; }
 .actions:has(#importa-file:focus-visible) label.btn { outline: 3px solid var(--flare); outline-offset: 2px; }
+
+/* ---------- casella di spunta ---------- */
+.check { display: flex; gap: 10px; align-items: center; font-size: .95rem; cursor: pointer; }
+.check input { width: 22px; height: 22px; accent-color: var(--flare); }
+/* dettaglio sotto la descrizione della voce */
+.voci textarea.det { margin-top: 6px; min-height: 40px; font-size: .9rem; color: var(--ash); }

@@ -14,7 +14,7 @@ const numero = { anyOf: [{ type: "number" }, { type: "null" }] };
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["tipo", "data", "cliente", "cantiere", "voci", "iva_percentuale", "totale_scritto", "note", "dubbi"],
+  required: ["tipo", "data", "cliente", "cantiere", "oggetto", "voci", "iva_percentuale", "totale_scritto", "note", "dubbi"],
   properties: {
     tipo: { type: "string", enum: ["preventivo", "conto", "non_chiaro"] },
     data: { type: "string", description: "Data del documento in formato AAAA-MM-GG, stringa vuota se assente" },
@@ -29,16 +29,18 @@ const SCHEMA = {
         telefono: { type: "string" },
       },
     },
-    cantiere: { type: "string", description: "Indirizzo o descrizione del cantiere, se diverso dal cliente" },
+    cantiere: { type: "string", description: "Luogo dei lavori (indirizzo del cantiere), se scritto" },
+    oggetto: { type: "string", description: "Oggetto del lavoro in poche parole, es. Ristrutturazione appartamento, se scritto o evidente" },
     voci: {
       type: "array",
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["descrizione", "unita", "quantita", "prezzo_unitario", "importo"],
+        required: ["descrizione", "dettaglio", "unita", "quantita", "prezzo_unitario", "importo"],
         properties: {
-          descrizione: { type: "string" },
-          unita: { type: "string", enum: ["mq", "ml", "pz", "h", "a corpo", ""] },
+          descrizione: { type: "string", description: "La lavorazione, in una frase" },
+          dettaglio: { type: "string", description: "Precisazioni sulla voce (ambienti, posizione), stringa vuota se non ci sono" },
+          unita: { type: "string", enum: ["mq", "ml", "pz", "cad", "h", "kg", "a corpo", ""] },
           quantita: numero,
           prezzo_unitario: numero,
           importo: numero,
@@ -57,7 +59,7 @@ const ISTRUZIONI = `Trascrivi il conto scritto a mano nella foto. È un foglio d
 Regole:
 - Trascrivi quello che c'è scritto, senza aggiungere voci, prezzi o dati che non vedi. Se un campo manca lascia la stringa vuota o null.
 - Le cifre sono la parte più importante: in italiano la virgola separa i decimali e il punto le migliaia ("1.250,50" = 1250.5). Restituisci i numeri come numeri.
-- Per ogni voce indica quantità, unità (mq, ml, pz, h, "a corpo"), prezzo unitario e importo quando sono scritti. Se l'importo scritto non corrisponde a quantità per prezzo, trascrivi comunque quello scritto e segnalalo nei dubbi.
+- Per ogni voce indica quantità, unità (mq, ml, pz, cad, h, kg, "a corpo"), prezzo unitario e importo quando sono scritti. Se la voce elenca ambienti o posizioni (es. "fodera cucina, tramezzo bagno"), metti la lavorazione in "descrizione" e l'elenco in "dettaglio". Se l'importo scritto non corrisponde a quantità per prezzo, trascrivi comunque quello scritto e segnalalo nei dubbi.
 - Riscrivi le descrizioni in italiano corretto e leggibile, sciogliendo le abbreviazioni ovvie ("pav." = pavimento, "riv." = rivestimento), senza cambiarne il significato.
 - tipo: "preventivo" se il foglio stima lavori da fare, "conto" se riepiloga lavori eseguiti, "non_chiaro" se non si capisce.
 - iva_percentuale: solo se è scritta. totale_scritto: il totale finale scritto sul foglio, se c'è.

@@ -1,24 +1,88 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/leggi-conto.js": { "maxDuration": 120 }
+    "api/leggi-conto.js": {
+      "maxDuration": 120
+    },
+    "api/pdf.js": {
+      "includeFiles": "api/_lib/fonts/**"
+    }
   },
   "redirects": [
-    { "source": "/chi-siamo", "destination": "/impresa.html", "permanent": true },
-    { "source": "/chi-siamo/", "destination": "/impresa.html", "permanent": true },
-    { "source": "/contact", "destination": "/contatti.html", "permanent": true },
-    { "source": "/contact/", "destination": "/contatti.html", "permanent": true },
-    { "source": "/admin", "destination": "/admin/", "permanent": false }
+    {
+      "source": "/chi-siamo",
+      "destination": "/impresa.html",
+      "permanent": true
+    },
+    {
+      "source": "/chi-siamo/",
+      "destination": "/impresa.html",
+      "permanent": true
+    },
+    {
+      "source": "/contact",
+      "destination": "/contatti.html",
+      "permanent": true
+    },
+    {
+      "source": "/contact/",
+      "destination": "/contatti.html",
+      "permanent": true
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/",
+      "permanent": false
+    }
   ],
   "headers": [
-    { "source": "/(.*)\\.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
-    { "source": "/assets/(css|js)/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
-    { "source": "/assets/(img|video)/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000" }] },
-    { "source": "/admin/(.*)", "headers": [
-      { "key": "Cache-Control", "value": "no-store" },
-      { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-      { "key": "X-Frame-Options", "value": "DENY" },
-      { "key": "Referrer-Policy", "value": "same-origin" }
-    ] }
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(css|js)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(img|video)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000"
+        }
+      ]
+    },
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "same-origin"
+        }
+      ]
+    }
   ]
 }

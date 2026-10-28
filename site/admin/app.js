@@ -170,33 +170,60 @@
     });
   });
 
+  /* ---------- condizioni generali ----------
+     Le originali sono quelle del modello RD; "Salva come predefinite"
+     le sostituisce su questo dispositivo per i documenti successivi. */
+  var CONDIZIONI = [
+    'I prezzi si intendono validi per il periodo indicato nel presente preventivo e esclusi di IVA.',
+    'Eventuali lavori non espressamente indicati saranno quantificati a parte, previo accordo.',
+    'Le quantità sono stimate: il consuntivo sarà redatto sulla base delle misure effettivamente eseguite.',
+    'Sono esclusi, salvo diversa indicazione: pratiche edilizie, oneri comunali, progettazione e direzione lavori.',
+    'Il cantiere sarà consegnato pulito e sgombero da materiali di risulta.',
+    "I lavori saranno eseguiti a regola d'arte",
+  ];
+  function condizioniPredefinite() {
+    var c = store(function (ls) { return JSON.parse(ls.getItem('rd-condizioni') || 'null'); });
+    return Array.isArray(c) && c.length ? c : CONDIZIONI;
+  }
+  function piu30(iso) {
+    var d = iso ? new Date(iso + 'T12:00:00') : new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().slice(0, 10);
+  }
+
   /* ---------- 2. editor ---------- */
   var form = $('#form'), righe = $('#righe');
-  var UNITA = [['mq', 'm²'], ['ml', 'ml'], ['pz', 'pz'], ['h', 'ore'], ['a corpo', 'a corpo'], ['', '—']];
+  var UNITA = [['mq', 'm²'], ['ml', 'ml'], ['pz', 'pz'], ['cad', 'cad'], ['h', 'ore'], ['kg', 'kg'], ['a corpo', 'a corpo'], ['', '—']];
 
   function riga(v) {
     v = v || {};
     var tr = document.createElement('tr');
     tr.innerHTML =
-      '<td class="desc" data-l="Descrizione"><textarea rows="1" aria-label="Descrizione"></textarea></td>' +
+      '<td class="desc" data-l="Descrizione"><textarea class="tit" rows="1" aria-label="Descrizione"></textarea>' +
+      '<textarea class="det" rows="1" placeholder="Dettaglio (facoltativo)" aria-label="Dettaglio della voce"></textarea></td>' +
       '<td data-l="U.M."><select aria-label="Unità di misura">' + UNITA.map(function (u) { return '<option value="' + u[0] + '">' + u[1] + '</option>'; }).join('') + '</select></td>' +
       '<td class="num" data-l="Q.tà"><input inputmode="decimal" aria-label="Quantità"></td>' +
       '<td class="num" data-l="Prezzo €"><input inputmode="decimal" aria-label="Prezzo unitario"></td>' +
       '<td class="num" data-l="Importo €"><input inputmode="decimal" aria-label="Importo"></td>' +
       '<td><button class="del" type="button" aria-label="Rimuovi voce">×</button></td>';
-    var f = tr.querySelectorAll('textarea, select, input');
-    f[0].value = v.descrizione || '';
-    f[1].value = v.unita != null ? v.unita : 'mq';
-    f[2].value = fmtNum(v.quantita);
-    f[3].value = fmtNum(v.prezzo_unitario);
-    f[4].value = fmtNum(v.importo);
+    var f = campi(tr);
+    f.tit.value = v.descrizione || '';
+    f.det.value = v.dettaglio || '';
+    f.um.value = v.unita != null ? v.unita : 'mq';
+    f.q.value = fmtNum(v.quantita);
+    f.p.value = fmtNum(v.prezzo_unitario);
+    f.imp.value = fmtNum(v.importo);
     righe.appendChild(tr);
     return tr;
   }
 
+  function campi(tr) {
+    var i = tr.querySelectorAll('input');
+    return { tit: tr.querySelector('.tit'), det: tr.querySelector('.det'), um: tr.querySelector('select'), q: i[0], p: i[1], imp: i[2] };
+  }
   function leggiRiga(tr) {
-    var f = tr.querySelectorAll('textarea, select, input');
-    return { descrizione: f[0].value.trim(), unita: f[1].value, quantita: parseNum(f[2].value), prezzo_unitario: parseNum(f[3].value), importo: parseNum(f[4].value) };
+    var f = campi(tr);
+    return { descrizione: f.tit.value.trim(), dettaglio: f.det.value.trim(), unita: f.um.value, quantita: parseNum(f.q.value), prezzo_unitario: parseNum(f.p.value), importo: parseNum(f.imp.value) };
   }
 
   function leggiForm() {
@@ -207,8 +234,14 @@
       cliente: { nome: g('cliente.nome'), indirizzo: g('cliente.indirizzo'), codice_fiscale_piva: g('cliente.codice_fiscale_piva'), telefono: g('cliente.telefono') },
       cliente_id: form.dataset.clienteId || '',
       cantiere: g('cantiere'),
+      oggetto: g('oggetto'),
+      valido_fino: g('valido_fino'),
       voci: Array.prototype.map.call(righe.children, leggiRiga).filter(function (v) { return v.descrizione || v.importo != null || v.quantita != null; }),
+      mostra_prezzi: form.elements.mostra_prezzi.checked,
+      totale_manuale: parseNum(g('totale_manuale')),
+      oneri_sicurezza: parseNum(g('oneri_sicurezza')),
       iva_percentuale: parseNum(g('iva_percentuale')),
+      condizioni: form.elements.condizioni.value.split('\n').map(function (c) { return c.replace(/^\s*[-–•]\s*/, '').trim(); }).filter(Boolean),
       note: form.elements.note.value.trim(),
       totale_scritto: form.dataset.totaleScritto ? Number(form.dataset.totaleScritto) : null,
     };
@@ -230,14 +263,21 @@
         imponibile += v.importo || 0;
       }
     });
-    imponibile = r2(imponibile);
+    var somma = r2(imponibile);
+    var manuale = parseNum(form.elements.totale_manuale.value);
+    var lavori = manuale != null ? r2(manuale) : somma;
+    var oneri = parseNum(form.elements.oneri_sicurezza.value) || 0;
+    imponibile = r2(lavori + oneri);
     var al = parseNum(form.elements.iva_percentuale.value);
     var iva = al == null ? 0 : r2(imponibile * al / 100);
     var tot = r2(imponibile + iva);
+    form.elements.totale_manuale.placeholder = EUR.format(somma);
     $('#totali').innerHTML =
-      '<div><span>Imponibile</span><span>' + EUR.format(imponibile) + '</span></div>' +
+      '<div><span>Totale lavori</span><span>' + EUR.format(lavori) + '</span></div>' +
+      '<div><span>Oneri per la sicurezza</span><span>' + EUR.format(oneri) + '</span></div>' +
       (al == null ? '' : '<div><span>IVA ' + fmtNum(al) + '%</span><span>' + EUR.format(iva) + '</span></div>') +
-      '<div class="big"><span>Totale</span><b>' + EUR.format(tot) + '</b></div>';
+      '<div class="big"><span>Totale ' + (al == null ? 'IVA esclusa' : 'IVA inclusa') + '</span><b>' + EUR.format(tot) + '</b></div>';
+    $('#campo-validita').hidden = leggiForm().tipo === 'conto';
 
     /* confronto con il totale scritto a penna: se non torna, va guardato */
     var ts = form.dataset.totaleScritto ? Number(form.dataset.totaleScritto) : null;
@@ -259,6 +299,16 @@
     var c = d.cliente || {};
     ['nome', 'indirizzo', 'codice_fiscale_piva', 'telefono'].forEach(function (k) { form.elements['cliente.' + k].value = c[k] || ''; });
     form.elements.cantiere.value = d.cantiere || '';
+    form.elements.oggetto.value = d.oggetto || '';
+    form.elements.valido_fino.value = d.valido_fino || piu30(form.elements.data.value);
+    form.elements.mostra_prezzi.checked = !!d.mostra_prezzi;
+    /* foglio con sole quantità e un totale finale (come i preventivi RD):
+       il totale scritto diventa il "totale lavori a corpo" */
+    var senzaPrezzi = (d.voci || []).every(function (v) { return v.importo == null && v.prezzo_unitario == null; });
+    form.elements.totale_manuale.value = fmtNum(d.totale_manuale != null ? d.totale_manuale
+      : (!daBozza && senzaPrezzi && d.totale_scritto != null ? d.totale_scritto : null));
+    form.elements.oneri_sicurezza.value = fmtNum(d.oneri_sicurezza != null ? d.oneri_sicurezza : 0);
+    form.elements.condizioni.value = (d.condizioni && d.condizioni.length ? d.condizioni : condizioniPredefinite()).join('\n');
     if (d.cliente_id) form.dataset.clienteId = d.cliente_id; else delete form.dataset.clienteId;
     statoCliente(d.cliente_id ? 'Cliente dalla rubrica' : '', !!d.cliente_id);
     form.elements.iva_percentuale.value = d.iva_percentuale != null && [4, 10, 22].indexOf(d.iva_percentuale) > -1 ? String(d.iva_percentuale) : '';
@@ -292,6 +342,17 @@
   }
 
   form.addEventListener('input', aggiorna);
+  $('#cond-predefinite').addEventListener('click', function () {
+    var c = leggiForm().condizioni;
+    store(function (ls) { ls.setItem('rd-condizioni', JSON.stringify(c)); });
+    $('#stato-cond').textContent = 'Salvate: le prossime volte partono da queste ✓';
+  });
+  $('#cond-ripristina').addEventListener('click', function () {
+    store(function (ls) { ls.removeItem('rd-condizioni'); });
+    form.elements.condizioni.value = CONDIZIONI.join('\n');
+    $('#stato-cond').textContent = 'Ripristinate le condizioni originali.';
+    aggiorna();
+  });
   form.addEventListener('change', aggiorna);
   righe.addEventListener('click', function (e) {
     var b = e.target.closest('.del');
@@ -302,7 +363,7 @@
   });
   $('#aggiungi').addEventListener('click', function () {
     var tr = riga();
-    tr.querySelector('textarea').focus();
+    tr.querySelector('.tit').focus();
     aggiorna();
   });
   $('#nuovo').addEventListener('click', function () {

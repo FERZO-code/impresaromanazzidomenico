@@ -25,11 +25,17 @@ export async function POST(request) {
     data: str(b.data, 10),
     cliente: { nome: str(c.nome, 200), indirizzo: str(c.indirizzo, 300), codice_fiscale_piva: str(c.codice_fiscale_piva, 40), telefono: str(c.telefono, 40) },
     cantiere: str(b.cantiere, 300),
+    oggetto: str(b.oggetto, 200),
+    valido_fino: str(b.valido_fino, 10),
     voci: b.voci.slice(0, 200).map((v) => ({
-      descrizione: str(v.descrizione, 1000), unita: str(v.unita, 20),
+      descrizione: str(v.descrizione, 1000), dettaglio: str(v.dettaglio, 1000), unita: str(v.unita, 20),
       quantita: n(v.quantita), prezzo_unitario: n(v.prezzo_unitario), importo: n(v.importo),
     })),
+    mostra_prezzi: b.mostra_prezzi === true,
+    totale_manuale: n(b.totale_manuale),
+    oneri_sicurezza: n(b.oneri_sicurezza),
     iva_percentuale: n(b.iva_percentuale),
+    condizioni: (Array.isArray(b.condizioni) ? b.condizioni : []).slice(0, 30).map((c) => str(c, 500)),
     note: str(b.note, 4000),
     foto: (Array.isArray(b.foto) ? b.foto : []).slice(0, MAX_FOTO).map(leggiFoto).filter(Boolean),
   };
@@ -41,7 +47,8 @@ export async function POST(request) {
     console.error(err);
     return Response.json({ errore: "Una delle foto non è leggibile: rimuovila e riprova." }, { status: 422 });
   }
-  const nome = `${dati.tipo === "conto" ? "Conto" : "Preventivo"}${dati.numero ? "-" + dati.numero.replace(/[^\w-]+/g, "-") : ""}-${(dati.cliente.nome || "cliente").replace(/[^\wÀ-ú]+/g, "-")}.pdf`;
+  /* come il modello: "Preventivo - Coniugi Didonna.pdf" */
+  const nome = `${dati.tipo === "conto" ? "Conto lavori" : "Preventivo"}${dati.numero ? " " + dati.numero.replace(/[^\w-]+/g, "-") : ""} - ${(dati.cliente.nome || "cliente").replace(/[^\w À-ú'.-]+/g, " ").trim()}.pdf`;
   return new Response(bytes, {
     headers: {
       "Content-Type": "application/pdf",
