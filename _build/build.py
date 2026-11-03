@@ -13,12 +13,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", "site"))
 SITE_URL = "https://www.impresaromanazzidomenico.it/"
 TEL_D, TEL_G = "3471769861", "3475679127"
-EMAIL = "domrom@hotmail.it"
-ADDRESS = "Via Falcone 12, 70018 Rutigliano (BA)"
-MAPS = "https://www.google.com/maps/search/?api=1&amp;query=Via+Falcone+12+70018+Rutigliano+BA"
+EMAIL = "impresaromanazzid@virgilio.it"
 IG_PROFILE = "https://www.instagram.com/impresaromanazzidomenico/"
 VIDEO_DIR = "assets/video/"
-MAILTO = "mailto:domrom@hotmail.it?subject=Richiesta%20di%20sopralluogo&amp;body=Buongiorno%2C%0A%0Avorrei%20un%20sopralluogo%20per%3A%0A%0AAmbiente%20%28bagno%2C%20cucina%2C%20terrazzo%2C%20casa%20intera...%29%3A%20%0AMetri%20quadri%2C%20anche%20a%20occhio%3A%20%0AMateriale%20gi%C3%A0%20scelto%20%28formato%20e%20marca%29%2C%20se%20c%27%C3%A8%3A%20%0AComune%3A%20%0AQuando%20vorrei%20iniziare%3A%20%0A%0AIl%20mio%20numero%20di%20telefono%3A%20%0A"
+MAILTO = "mailto:impresaromanazzid@virgilio.it?subject=Richiesta%20di%20sopralluogo&amp;body=Buongiorno%2C%0A%0Avorrei%20un%20sopralluogo%20per%3A%0A%0AAmbiente%20%28bagno%2C%20cucina%2C%20terrazzo%2C%20casa%20intera...%29%3A%20%0AMetri%20quadri%2C%20anche%20a%20occhio%3A%20%0AMateriale%20gi%C3%A0%20scelto%20%28formato%20e%20marca%29%2C%20se%20c%27%C3%A8%3A%20%0AComune%3A%20%0AQuando%20vorrei%20iniziare%3A%20%0A%0AIl%20mio%20numero%20di%20telefono%3A%20%0A"
 
 def esc(s): return html.escape(s, quote=True)
 
@@ -215,10 +213,9 @@ def nav_overlay(current):
     <dl class="nav-foot">
       <div><dt>Telefono</dt><dd><a href="tel:+39%s">%s</a> · <a href="tel:+39%s">%s</a></dd></div>
       <div><dt>E-mail</dt><dd><a href="mailto:%s">%s</a></dd></div>
-      <div><dt>Sede</dt><dd><a href="%s" target="_blank" rel="noopener">%s</a></dd></div>
     </dl>
   </div>
-</div>""" % (items, TEL_D, TEL_D, TEL_G, TEL_G, EMAIL, EMAIL, MAPS, esc(ADDRESS))
+</div>""" % (items, TEL_D, TEL_D, TEL_G, TEL_G, EMAIL, EMAIL)
 
 def footer():
     links = "".join('<li><a href="%s">%s</a></li>' % (h, esc(l)) for h, l in NAV)
@@ -253,7 +250,6 @@ def footer():
           <li><a href="tel:+39%s">Domenico · %s</a></li>
           <li><a href="tel:+39%s">Giuseppe · %s</a></li>
           <li><a href="mailto:%s">%s</a></li>
-          <li><a href="%s" target="_blank" rel="noopener">%s</a></li>
         </ul>
       </div>
     </div>
@@ -286,7 +282,7 @@ def footer():
 <script src="%s" defer></script>""" % (
     lines("Parliamo del", '<span class="flare">tuo cantiere.</span>'),
     TEL_D, icon("phone"), TEL_D, MAILTO, icon("mail"), links, svc_links,
-    TEL_D, TEL_D, TEL_G, TEL_G, EMAIL, EMAIL, MAPS, esc(ADDRESS),
+    TEL_D, TEL_D, TEL_G, TEL_G, EMAIL, EMAIL,
     TEL_D, icon("phone"), MAILTO, icon("mail"),
     icon("close"), icon("left"), icon("right"), asset("assets/js/main.js"))
 
@@ -297,7 +293,7 @@ LD = """<script type="application/ld+json">
  "url":"%(u)s","image":"%(u)sassets/img/photos/bagno-lavabi-01-lg.jpg",
  "logo":"%(u)sassets/img/brand/logo-rd.png",
  "telephone":["+39%(t1)s","+39%(t2)s"],"email":"%(e)s",
- "address":{"@type":"PostalAddress","streetAddress":"Via Falcone 12","postalCode":"70018",
+ "address":{"@type":"PostalAddress",
    "addressLocality":"Rutigliano","addressRegion":"BA","addressCountry":"IT"},
  "areaServed":{"@type":"AdministrativeArea","name":"Provincia di Bari"},
  "founder":{"@type":"Person","name":"Romanazzi Domenico"},
@@ -527,7 +523,7 @@ def faq_ld(pairs):
 
 PROVIDER = {"@type": "HomeAndConstructionBusiness", "@id": SITE_URL + "#impresa",
             "name": "Impresa Romanazzi Domenico", "telephone": "+39" + TEL_D, "url": SITE_URL,
-            "address": {"@type": "PostalAddress", "streetAddress": "Via Falcone 12", "postalCode": "70018",
+            "address": {"@type": "PostalAddress",
                         "addressLocality": "Rutigliano", "addressRegion": "BA", "addressCountry": "IT"}}
 
 
@@ -981,7 +977,7 @@ contatti = Template("""
       <div class="contact-row rise">
         <dt>Dove siamo</dt>
         <dd>
-          <a class="big" href="$maps" target="_blank" rel="noopener">$address</a>
+          <p class="big">Rutigliano (BA)</p>
           <p class="note">Base a Rutigliano. Lavoriamo nei comuni vicini e in tutta la provincia di Bari.</p>
         </dd>
       </div>
@@ -1014,12 +1010,12 @@ contatti = Template("""
   </div>
 </section>
 """).substitute(h1=lines("Parliamo", '<span class="flare">di lavoro.</span>'),
-                tel1=TEL_D, tel2=TEL_G, email=EMAIL, mailto=MAILTO, maps=MAPS, address=esc(ADDRESS),
+                tel1=TEL_D, tel2=TEL_G, email=EMAIL, mailto=MAILTO,
                 h2=lines("Quattro cose", "da avere sotto mano."))
 
 write("contatti.html", page(
   "Contatti e preventivi | Piastrellista a Rutigliano (BA)",
-  "Chiama il 347 176 9861 o scrivi a domrom@hotmail.it per un sopralluogo e un preventivo: piastrellisti e posatori a Rutigliano e in provincia di Bari.",
+  "Chiama il 347 176 9861 o scrivi a impresaromanazzid@virgilio.it per un sopralluogo e un preventivo: piastrellisti a Rutigliano e provincia di Bari.",
   "contatti.html", contatti, og="calacatta-rubinetteria-01",
   ld=LD + "\n" + ld_block(breadcrumb([("Home", ""), ("Contatti", "contatti.html")]))))
 

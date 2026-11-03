@@ -299,10 +299,11 @@ Nessuna frase è ripresa alla lettera.
 
 ## Da verificare prima di pubblicare
 
-1. **Indirizzo.** `Via Falcone 12, 70018 Rutigliano (BA)` non compariva sul
-   vecchio sito: proviene da un elenco aziende online. Se è sbagliato va
-   corretto nel footer, nel menu, in `contatti.html` e nei dati strutturati
-   JSON-LD di `index.html` e `contatti.html`.
+1. **Indirizzo.** L'indirizzo della sede (via e CAP) è stato tolto dal sito vetrina:
+   da footer, menu, pagina Contatti e dati strutturati. Resta solo il comune
+   (Rutigliano, BA), che serve a Google per le ricerche locali. Nei PDF dei
+   preventivi l'indirizzo della sede è invece ancora stampato
+   (`site/api/_lib/impresa.js`).
 2. **Telefono.** Il vecchio footer riportava `347169861` (9 cifre) contro
    `3471769861` in testata. Ho usato ovunque quest'ultimo.
 3. **Newsletter.** Non ricreata: richiedeva un servizio lato server. Se serve,
