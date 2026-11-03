@@ -255,7 +255,9 @@
       '<td class="num" data-l="Q.tà"><input inputmode="decimal" aria-label="Quantità"></td>' +
       '<td class="num" data-l="Prezzo €"><input inputmode="decimal" aria-label="Prezzo unitario"></td>' +
       '<td class="num" data-l="Importo €"><input inputmode="decimal" aria-label="Importo"></td>' +
-      '<td><button class="del" type="button" aria-label="Rimuovi voce">×</button></td>';
+      '<td class="azioni"><button class="mv" type="button" data-mv="-1" aria-label="Sposta la voce su">↑</button>' +
+      '<button class="mv" type="button" data-mv="1" aria-label="Sposta la voce giù">↓</button>' +
+      '<button class="del" type="button" aria-label="Rimuovi voce">×</button></td>';
     var f = campi(tr);
     f.tit.value = v.descrizione || '';
     f.det.value = v.dettaglio || '';
@@ -264,6 +266,7 @@
     f.p.value = fmtNum(v.prezzo_unitario);
     f.imp.value = fmtNum(v.importo);
     righe.appendChild(tr);
+    aggiornaFrecce();
     return tr;
   }
 
@@ -417,11 +420,33 @@
     aggiorna();
   });
   form.addEventListener('change', aggiorna);
+  /* Spostamento: la voce scambia posto con la vicina; la numerazione nel PDF
+     segue l'ordine. Il focus resta sul pulsante premuto, così si può
+     continuare a spostare la stessa voce. */
+  function aggiornaFrecce() {
+    var tutte = righe.children;
+    Array.prototype.forEach.call(tutte, function (tr, i) {
+      tr.querySelector('[data-mv="-1"]').disabled = i === 0;
+      tr.querySelector('[data-mv="1"]').disabled = i === tutte.length - 1;
+    });
+  }
   righe.addEventListener('click', function (e) {
+    var m = e.target.closest('.mv');
+    if (m && !m.disabled) {
+      var tr = m.closest('tr'), su = m.dataset.mv === '-1';
+      if (su) righe.insertBefore(tr, tr.previousElementSibling);
+      else righe.insertBefore(tr.nextElementSibling, tr);
+      aggiornaFrecce();
+      if (m.disabled) m = tr.querySelector('.mv:not(:disabled)') || m;
+      m.focus();
+      form.dispatchEvent(new Event('input', { bubbles: true })); // ricalcola e segna le modifiche
+      return;
+    }
     var b = e.target.closest('.del');
     if (!b) return;
     b.closest('tr').remove();
     if (!righe.children.length) riga();
+    aggiornaFrecce();
     aggiorna();
   });
   $('#aggiungi').addEventListener('click', function () {

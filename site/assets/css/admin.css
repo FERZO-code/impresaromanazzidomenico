@@ -216,3 +216,11 @@ h2 { font-size: 1.6rem; }
 .acc input[inputmode="decimal"] { text-align: right; }
 @media (max-width: 600px) { .acc li { grid-template-columns: 1fr 1fr auto; } .acc li input:nth-child(2) { grid-column: 1 / -1; grid-row: 2; } }
 .card .label { font-size: .7rem; }
+
+/* ---------- spostamento delle voci ---------- */
+.voci .azioni { display: flex; gap: 4px; white-space: nowrap; }
+.mv { width: 40px; height: 40px; border: 2px solid var(--rule); background: var(--paper); cursor: pointer; font-size: 1.1rem; line-height: 1; }
+.mv:not(:disabled):hover { border-color: var(--ink); }
+.mv:disabled { opacity: .3; cursor: default; }
+.del:hover { border-color: #B3261E; color: #B3261E; }
+@media (max-width: 760px) { .voci td.azioni { grid-column: 1 / -1; } .voci .azioni .mv, .voci .azioni .del { flex: 1; height: 44px; } }
