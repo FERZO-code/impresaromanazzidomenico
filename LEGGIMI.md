@@ -402,3 +402,9 @@ Da fare fuori dal codice:
 2. **Google Search Console.** Aggiungere la proprietà di tipo *Dominio* (verifica tramite record DNS) e inviare `sitemap.xml`. Poi, con *Controllo URL*, chiedere l'indicizzazione della home e delle pagine interne.
 3. **Profilo dell'attività su Google (Maps)**, con il sito collegato: rafforza le ricerche per nome.
 I sitelink compaiono di solito quando qualcuno cerca il nome dell'impresa, dopo alcune settimane dall'indicizzazione.
+
+**Sitemap e date.** `sitemap.xml` elenca le 8 pagine da indicizzare. La data `lastmod` di ogni pagina cambia solo quando cambia il suo contenuto (i numeri di versione di CSS e JS non contano): lo stato è in `_build/lastmod.json`, che va committato insieme al sito. Il campo `priority` è stato tolto perché Google lo ignora. Non vanno nella sitemap: `404.html`, `admin/`, `api/` e il file di verifica `google9060c3e3fdefe24c.html`, che va lasciato dov'è.
+
+**Menu visibile in barra (computer).** Da 1100 px di larghezza la barra in alto mostra Lavorazioni (con tendina sulle 4 pagine di servizio), Lavori, Impresa e Contatti, oltre al telefono e al pulsante del menù a schermo intero. Sotto 1100 px resta solo il pulsante. Sono link normali già presenti nel codice di ogni pagina (`bar_nav()` in `build.py`, stile in `style.css`, apertura della tendina in `main.js`); la voce della pagina corrente è sottolineata.
+
+**Massetti.** La pagina Massetti e il riquadro in home parlano ora anche di massetti autolivellanti e solette alleggerite (titolo, descrizione, testi, passaggi, due nuove domande frequenti e dati strutturati per Google).

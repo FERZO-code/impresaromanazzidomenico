@@ -161,7 +161,20 @@ NAV = [("index.html","Home"),("lavori.html","Lavori"),("impresa.html","Impresa")
 check_photos()
 
 # ============================ STRUTTURA COMUNE ============================
-def bar():
+def bar_nav(current):
+    """Menu visibile in barra sul computer: link veri, sempre nel codice della
+    pagina. Lavorazioni apre una tendina con le quattro pagine di servizio."""
+    sub = "".join('<li><a href="%s"%s>%s</a></li>' % (
+        sp["file"], ' aria-current="page"' if sp["file"] == current else "", esc(sp["short"])) for sp in SERVICE_PAGES)
+    in_service = any(sp["file"] == current for sp in SERVICE_PAGES)
+    items = "".join('<li><a href="%s"%s>%s</a></li>' % (
+        h, ' aria-current="page"' if h == current else "", esc(l)) for h, l in NAV if h != "index.html")
+    return ('<nav class="bar-nav" aria-label="Menu principale"><ul>'
+            '<li class="bar-sub%s"><button type="button" aria-expanded="false" aria-controls="bar-sub-list">Lavorazioni'
+            '<svg viewBox="0 0 10 6" width="10" height="6" aria-hidden="true" focusable="false"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>'
+            '<ul id="bar-sub-list">%s</ul></li>%s</ul></nav>') % (" is-current" if in_service else "", sub, items)
+
+def bar(current=""):
     return """<a class="skip-link" href="#main">Salta al contenuto</a>
 <div class="grid-lines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
 <header class="site-bar">
@@ -171,6 +184,7 @@ def bar():
       <span class="brand-text"><b>Romanazzi Domenico</b><span>Piastrellisti e posatori</span></span>
       <span class="visually-hidden">— torna alla home</span>
     </a>
+    %s
     <div class="bar-right">
       <a class="bar-tel" href="tel:+39%s">%s %s</a>
       <button class="burger" type="button" aria-expanded="false" aria-controls="nav-overlay">
@@ -179,7 +193,7 @@ def bar():
       </button>
     </div>
   </div>
-</header>""" % (TEL_D, icon("phone"), TEL_D)
+</header>""" % (bar_nav(current), TEL_D, icon("phone"), TEL_D)
 
 def nav_overlay(current):
     """Menu a schermo intero. "Lavorazioni" non è una pagina: è un pulsante
@@ -303,7 +317,7 @@ LD = """<script type="application/ld+json">
    {"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"07:00","closes":"13:00"}],
  "makesOffer":[
    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Posa di pavimenti, rivestimenti e piatti doccia"}},
-   {"@type":"Offer","itemOffered":{"@type":"Service","name":"Esecuzione di massetti"}},
+   {"@type":"Offer","itemOffered":{"@type":"Service","name":"Esecuzione di massetti cementizi, anidritici e autolivellanti e di solette alleggerite"}},
    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Impermeabilizzazione di superfici"}},
    {"@type":"Offer","itemOffered":{"@type":"Service","name":"Posa di gres laminato a grande formato"}}]}
 </script>
@@ -376,7 +390,7 @@ def page(title, desc, current, body, og="bagno-lavabi-01", ld="", head_extra="")
 """ % (esc(title), esc(desc), url, url, esc(title), esc(desc), SITE_URL, og,
        FONTS.replace("&", "&amp;"), FONTS.replace("&", "&amp;"), head_extra,
        asset("assets/css/style.css"), ld, HEAD_SCRIPT,
-       bar(), nav_overlay(current), body, footer())
+       bar(current), nav_overlay(current), body, footer())
 
 # l'immagine più grande della home, richiesta subito: è quella che decide il
 # tempo di caricamento percepito (LCP)
@@ -424,17 +438,18 @@ SERVICE_PAGES = [
            "È una doccia senza gradino, rivestita con lo stesso materiale del pavimento o con un piatto ribassato. Richiede un sottofondo con le pendenze verso lo scarico e un'impermeabilizzazione accurata, che facciamo prima della posa.")]},
 
  {"file": "massetti.html", "short": "Massetti",
-  "title": "Massetti cementizi e anidritici a Rutigliano | Romanazzi",
-  "desc": "Massetti cementizi e anidritici per pavimenti nuovi e riscaldamento a pavimento, con verifica dell'umidità prima della posa. Rutigliano e provincia di Bari.",
+  "title": "Massetti autolivellanti e alleggeriti a Rutigliano | Romanazzi",
+  "desc": "Massetti cementizi, anidritici e autolivellanti, solette alleggerite, anche su riscaldamento a pavimento. Umidità verificata prima della posa. Rutigliano (BA).",
   "h1": ("Massetti", '<span class="flare">in bolla.</span>'),
-  "lede": "Realizziamo massetti cementizi e anidritici per pavimenti nuovi e ristrutturazioni: la base piana e solida su cui poggia ogni posa.",
+  "lede": "Realizziamo massetti cementizi, anidritici e autolivellanti e solette alleggerite, per pavimenti nuovi e ristrutturazioni: la base piana e solida su cui poggia ogni posa.",
   "photo": "posa-colla-01", "label": "La lavorazione",
   "h2": "Lo strato che non si vede decide tutto.",
   "paras": [
    "Il massetto è lo strato fra il solaio e il pavimento. Non si vede, ma decide quasi tutto: se è fuori livello la posa ne eredita i difetti, se non è asciutto l'umidità può staccare il pavimento o macchiarlo nel tempo.",
-   "Lavoriamo con massetti a base cementizia, i più diffusi, e anidritici, molto fluidi e adatti soprattutto sopra i pannelli del riscaldamento a pavimento. Prima di posare misuriamo l'umidità residua: si posa solo quando il massetto è pronto."],
-  "steps": [("Verifica del solaio", "Controlliamo quote, impianti e isolamenti e fissiamo il livello finito del pavimento."),
-            ("Getto", "Stendiamo il massetto alle quote stabilite, con i giunti necessari fra un ambiente e l'altro."),
+   "Lavoriamo con massetti a base cementizia, i più diffusi, e anidritici, molto fluidi e adatti soprattutto sopra i pannelli del riscaldamento a pavimento.",
+   "Per le superfici che chiedono un fondo molto piano, come sotto le lastre di grande formato, realizziamo massetti autolivellanti: si stendono a pompa e si livellano da soli. Dove bisogna alleggerire il solaio, ricoprire gli impianti o raggiungere quote importanti, eseguiamo solette alleggerite con inerti leggeri, come l'argilla espansa o il polistirolo. Prima di posare misuriamo l'umidità residua: si posa solo quando il massetto è pronto."],
+  "steps": [("Verifica del solaio", "Controlliamo quote, impianti, isolamenti e il peso che il solaio può portare, e fissiamo il livello finito del pavimento."),
+            ("Scelta e getto", "Scegliamo il tipo di massetto in base all'ambiente e al pavimento e lo stendiamo alle quote stabilite, con i giunti necessari fra un ambiente e l'altro."),
             ("Stagionatura", "Il massetto deve asciugare per il tempo che gli serve: accelerare questa fase è la causa più comune di problemi."),
             ("Controllo dell'umidità", "Prima della posa misuriamo l'umidità residua e confermiamo che il fondo sia pronto.")],
   "shots": ["posa-colla-01", "taglio-piastrella-01", "corridoio-legno-01", "ingresso-legno-01"],
@@ -447,6 +462,10 @@ SERVICE_PAGES = [
            "Dipende dal tipo di massetto, dallo spessore e dall'ambiente. Per i massetti cementizi tradizionali si usa spesso come riferimento circa una settimana per ogni centimetro di spessore, ma l'unico modo affidabile è misurare l'umidità residua prima della posa."),
           ("Che differenza c'è fra massetto cementizio e anidritico?",
            "Il cementizio è il più diffuso e versatile. L'anidritico, a base di solfato di calcio, è molto fluido, si livella quasi da solo e avvolge bene i tubi del riscaldamento a pavimento; teme però l'acqua, quindi non va usato in ambienti umidi o esterni senza protezione."),
+          ("Che cos'è un massetto autolivellante?",
+           "È un massetto molto fluido che, una volta steso, si livella da solo e dà una superficie molto planare. Si usa dove serve un fondo preciso, per esempio sotto le lastre di grande formato o i pavimenti incollati, e anche sopra i pannelli radianti. Può essere a base cementizia o anidritica: il tipo giusto dipende dall'ambiente e dal carico."),
+          ("A cosa serve una soletta alleggerita?",
+           "A ridurre il peso sul solaio: oltre al cemento si usano inerti leggeri, come l'argilla espansa o il polistirolo. È utile nelle ristrutturazioni, quando bisogna ricoprire tubi e impianti o recuperare dislivelli senza caricare troppo la struttura. Il peso che il solaio può sopportare va sempre verificato in cantiere."),
           ("Il massetto va bene con il riscaldamento a pavimento?",
            "Sì, sia il cementizio sia l'anidritico si usano sopra i pannelli radianti. Prima di posare il pavimento l'impianto va acceso e portato in temperatura gradualmente, secondo le indicazioni del produttore, per completare l'asciugatura.")]},
 
@@ -550,9 +569,9 @@ SERVICES = [
  ("Pavimenti, rivestimenti e piatti doccia",
   "Ambienti veri, dove nessun angolo è a novanta gradi. Tagliamo e montiamo sul posto pavimenti, rivestimenti a parete e piatti doccia su misura, con le fughe che filano diritte e le pendenze che scaricano davvero.",
   ["Formati su misura","Fughe allineate","Piatti doccia a filo"], "bagno-vasca-01"),
- ("Massetti cementizi e anidritici",
-  "È il livello su cui poggia tutto quello che verrà dopo. Lo tiriamo in bolla, lo lasciamo asciugare per il tempo che serve e ne controlliamo l'umidità residua prima di consegnarlo alla posa.",
-  ["Base cementizia","Base anidritica","Verifica dell'umidità"], "posa-colla-01"),
+ ("Massetti e solette alleggerite",
+  "È il livello su cui poggia tutto quello che verrà dopo. Cementizio, anidritico, autolivellante o alleggerito: scegliamo quello giusto per il solaio, lo tiriamo in bolla, lo lasciamo asciugare per il tempo che serve e ne controlliamo l'umidità residua prima di consegnarlo alla posa.",
+  ["Cementizi e anidritici","Autolivellanti","Solette alleggerite"], "posa-colla-01"),
  ("Impermeabilizzazioni",
   "Terrazze, balconi, bagni e piscine. Guaine e membrane si posano una volta sola: le stendiamo come se dovessimo tornare noi, fra dieci anni, a rispondere di un'infiltrazione.",
   ["Terrazze e balconi","Box doccia","Vasche e piscine"], "terrazzo-mapeguard-01"),
@@ -1161,12 +1180,29 @@ write("404.html", page("Pagina non trovata | Romanazzi Domenico",
 
 # ============================ robots / sitemap ============================
 write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nSitemap: %ssitemap.xml\n" % SITE_URL)
+# lastmod onesto: la data di una pagina cambia solo quando cambia il suo
+# contenuto (le versioni ?v=... dei file CSS/JS non contano). Google si fida
+# delle date solo se non cambiano ad ogni rigenerazione. Lo stato sta in
+# _build/lastmod.json, da committare insieme al sito.
 today = datetime.date.today().isoformat()
-PAGES = [("index.html", "1.0")] + [(sp["file"], "0.9") for sp in SERVICE_PAGES] + \
-        [("lavori.html", "0.8"), ("impresa.html", "0.7"), ("contatti.html", "0.8")]
+LASTMOD_FILE = os.path.join(HERE, "lastmod.json")
+try:
+    with open(LASTMOD_FILE, encoding="utf-8") as f: lastmod = _json.load(f)
+except (OSError, ValueError):
+    lastmod = {}
+PAGES = ["index.html"] + [sp["file"] for sp in SERVICE_PAGES] + ["lavori.html", "impresa.html", "contatti.html"]
+def page_fingerprint(name):
+    with open(os.path.join(ROOT, name), encoding="utf-8") as f:
+        return hashlib.md5(_re.sub(r"\?v=[0-9a-f]{8}", "", f.read()).encode("utf-8")).hexdigest()
+for h in PAGES:
+    fp = page_fingerprint(h)
+    if lastmod.get(h, {}).get("hash") != fp:
+        lastmod[h] = {"hash": fp, "date": today}
+with open(LASTMOD_FILE, "w", encoding="utf-8") as f:
+    _json.dump(lastmod, f, indent=1, sort_keys=True); f.write("\n")
 urls = "".join(
-  '  <url><loc>%s%s</loc><lastmod>%s</lastmod><priority>%s</priority></url>\n'
-  % (SITE_URL, "" if h == "index.html" else h, today, pr) for h, pr in PAGES)
+  '  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>\n'
+  % (SITE_URL, "" if h == "index.html" else h, lastmod[h]["date"]) for h in PAGES)
 write("sitemap.xml",
       '<?xml version="1.0" encoding="UTF-8"?>\n'
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n%s</urlset>\n' % urls)

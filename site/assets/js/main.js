@@ -377,6 +377,23 @@
   }
 
   /* =========================================================
+     Menu in barra (computer): la tendina "Lavorazioni" si apre al clic
+     (utile anche su tablet, dove non c'è il passaggio del mouse) e si
+     chiude con Esc o toccando fuori. Con il mouse si apre anche al passaggio.
+     ========================================================= */
+  (function () {
+    var wrap = document.querySelector('.bar-sub');
+    if (!wrap) return;
+    var btn = wrap.querySelector('button');
+    var set = function (open) { btn.setAttribute('aria-expanded', String(open)); wrap.classList.toggle('is-open', open); };
+    btn.addEventListener('click', function () { set(btn.getAttribute('aria-expanded') !== 'true'); });
+    document.addEventListener('click', function (e) { if (!wrap.contains(e.target)) set(false); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && wrap.classList.contains('is-open')) { set(false); btn.focus(); }
+    });
+  })();
+
+  /* =========================================================
      Tessere sopra le immagini: si sollevano in diagonale quando
      l'immagine entra in vista, poi vengono tolte dal documento.
      ========================================================= */
