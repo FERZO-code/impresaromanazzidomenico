@@ -608,6 +608,7 @@ html.has-callbar .site-footer { padding-bottom: 74px; }
 .quote { scroll-margin-top: var(--bar-h); }
 .quote-grid { display: grid; gap: clamp(32px, 5vw, 80px); }
 @media (min-width: 1000px) { .quote-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } .quote-intro { position: sticky; top: calc(var(--bar-h) + 32px); } }
+.quote-intro h2 { font-size: clamp(2.4rem, 1.2rem + 3.4vw, 4.2rem) !important; text-wrap: balance; }
 .quote-intro .note { color: var(--cemento); font-size: var(--t-sm); margin-top: var(--s3); }
 .quote-form { display: grid; gap: 18px; background: var(--bianco); border: 1px solid var(--fuga); border-radius: calc(var(--r) * 3); padding: clamp(20px, 3vw, 40px); }
 .qf-grid { display: grid; gap: 18px; }
