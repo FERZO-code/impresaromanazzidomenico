@@ -9,7 +9,7 @@
      vede negli spostamenti del modello): le misure e la spaziatura qui
      fanno lo stesso, così righe e a capo cadono negli stessi punti. */
 import fs from "node:fs";
-import { PDFDocument, rgb, setCharacterSpacing } from "pdf-lib";
+import { PDFDocument, rgb, setCharacterSpacing, pushGraphicsState, popGraphicsState, concatTransformationMatrix } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { IMPRESA } from "./impresa.js";
 import { LOGO_PNG } from "./logo.js";
@@ -27,10 +27,10 @@ const metrics = Object.fromEntries(Object.entries(fontBytes).map(([k, b]) => [k,
 /* ---------- colori del modello ---------- */
 const hex = (h) => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255);
 const C = {
-  ink: hex("#0B0B0B"), text: hex("#1D1D1D"), flare: hex("#FF680B"), flareText: hex("#B94400"),
-  sub: hex("#C9CAC7"), info: hex("#555555"), muted: hex("#67676A"), cond: hex("#444444"),
+  ink: hex("#0B0B0B"), petrolio: hex("#143039"), text: hex("#1D1D1D"), flare: hex("#FF680B"), flareText: hex("#B94400"),
+  sub: hex("#A7B9BD"), info: hex("#555555"), muted: hex("#67676A"), cond: hex("#444444"),
   rule: hex("#E4E2DD"), footRule: hex("#E3E3E3"), panel: hex("#F2F1EE"), zebra: hex("#FAF9F7"),
-  ivaNote: hex("#A8A8A6"), sign: hex("#777777"), signLine: hex("#333333"), foot: hex("#999999"), white: rgb(1, 1, 1),
+  ivaNote: hex("#A7B9BD"), sign: hex("#777777"), signLine: hex("#333333"), foot: hex("#999999"), white: rgb(1, 1, 1),
 };
 
 /* ---------- pagina e unità ---------- */
@@ -64,7 +64,30 @@ export const CONDIZIONI_PREDEFINITE = [
   "I lavori saranno eseguiti a regola d'arte",
 ];
 
+/* Se il documento sfora di poco su una seconda pagina, lo si ridisegna
+   rimpicciolito in modo uniforme (centrato, ancorato in alto) finché sta in
+   una pagina sola. Sotto SCALA_MIN il testo diventerebbe troppo piccolo:
+   in quel caso restano due pagine. La galleria di foto non conta e non si
+   rimpicciolisce. */
+const SCALA_MIN = 0.82;
+
 export async function buildPdf(d) {
+  const primo = await disegna(d, 1);
+  if (primo.pagine !== 2) return primo.bytes;
+  const altezza = PH / K;                                   // px utili di una pagina
+  const stima = altezza / (altezza + primo.occupato2);      // scala che "dovrebbe" bastare
+  if (stima < SCALA_MIN - 0.02) return primo.bytes;
+  for (let sc = Math.min(0.99, Math.ceil(stima * 100) / 100); sc >= SCALA_MIN - 1e-9; sc = Math.round((sc - 0.01) * 100) / 100) {
+    const r = await disegna(d, sc);
+    if (r.pagine === 1) return r.bytes;
+  }
+  return primo.bytes;
+}
+
+async function disegna(d, scala) {
+  /* con scala < 1 la pagina "contiene" più px: si allungano i limiti */
+  const extra = (PH / K) * (1 / scala - 1);
+  const LIM = LIMIT + extra, FRULE = FOOT_RULE + extra, FIRME = 1100 + extra;
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   const conto = d.tipo === "conto";
@@ -142,14 +165,16 @@ export async function buildPdf(d) {
     box(L, ruleY, CW, 1, C.footRule);
     text(piede, L + CW / 2, ruleY + 23, { size: 9.33, color: C.foot, align: "center" });
   };
-  const newPage = () => {
+  const newPage = (scalata = true) => {
     page = doc.addPage([PW, PH]);
     pages.push(page);
+    if (scalata && scala < 1) page.pushOperators(pushGraphicsState(),
+      concatTransformationMatrix(scala, 0, 0, scala, PW * (1 - scala) / 2, PH * (1 - scala)));
   };
 
   /* ================= pagina 1: testata ================= */
   newPage();
-  box(L, 38, CW, 86, C.ink);
+  box(L, 38, CW, 86, C.petrolio);
   box(L, 120, CW, 4, C.flare);
   page.drawImage(logo, { x: 70 * K, y: PH - (52 + 54) * K, width: 54 * K, height: 54 * K });
   text(IMPRESA.nome.toUpperCase(), 138.9, 78, { f: "cond", size: 25.33, color: C.white, ls: 25.33 * 0.026 });
@@ -199,7 +224,7 @@ export async function buildPdf(d) {
     const righe = wrap(d.oggetto.trim().toUpperCase(), CW - 16, "cond", 20, 20 * 0.01);
     box(L, y, 4, 21 + righe.length * 23, C.flare);
     label("Oggetto", 68.9, y + 13);
-    righe.forEach((l, i) => text(l, 68.9, y + 36 + i * 23, { f: "cond", size: 20, color: C.ink, ls: 20 * 0.01 }));
+    righe.forEach((l, i) => text(l, 68.9, y + 36 + i * 23, { f: "cond", size: 20, color: C.petrolio, ls: 20 * 0.01 }));
     y += 21 + righe.length * 23 + 12;
   }
 
@@ -210,7 +235,7 @@ export async function buildPdf(d) {
     : [["N.", 30], ["Descrizione dei lavori", 0], ["U.M.", 64], ["Q.tà", 50]];
   cols[1][1] = CW - cols.reduce((s, c) => s + c[1], 0);
   const cx = []; cols.reduce((x, c) => (cx.push(x), x + c[1]), L);
-  box(L, y, CW, 26, C.ink);
+  box(L, y, CW, 26, C.petrolio);
   cols.forEach(([t, w], i) => {
     const right = i >= 4;
     text(t.toUpperCase(), right ? cx[i] + w - 8 : cx[i] + 8, y + 17,
@@ -224,7 +249,7 @@ export async function buildPdf(d) {
     const det = v.dettaglio && v.dettaglio.trim() ? wrap(v.dettaglio.trim(), descW, "regular", 12.8) : [];
     const ultima = 23 + (tit.length - 1) * 20 + (det.length ? 21 + (det.length - 1) * 18 : 0);
     const h = ultima + 14.5; // nel modello le righe sono alte 37,5 px
-    if (y + h > LIMIT) { footer(FOOT_RULE); newPage(); y = TOP; }
+    if (y + h > LIM) { footer(FRULE); newPage(); y = TOP; }
     if (i % 2 === 1) box(L, y, CW, h, C.zebra);
     text(String(i + 1), 60.9, y + 23, { f: "bold", size: 14, color: C.flareText });
     tit.forEach((l, j) => text(l, 90.9, y + 23 + j * 20, { f: "bold", size: 14 }));
@@ -252,7 +277,7 @@ export async function buildPdf(d) {
   /* acconti già versati: righe sotto il totale e un secondo blocco "da saldare" */
   const totH = righeTot.length * 29 + 1 + 54 + (t.acconti.length ? t.acconti.length * 29 + 55 : 0);
   const bloccoH = Math.max(condH, totH);
-  if (y + bloccoH > LIMIT) { footer(FOOT_RULE); newPage(); y = TOP; }
+  if (y + bloccoH > LIM) { footer(FRULE); newPage(); y = TOP; }
   if (condizioni.length) {
     box(L, y, 414, condH, C.panel);
     label("Condizioni generali", 64.9, y + 19);
@@ -265,7 +290,7 @@ export async function buildPdf(d) {
     box(491, ty + 28, 250, 1, C.rule);
   });
   const by = y + righeTot.length * 29 + 1;
-  box(491, by, 250, 54, C.ink);
+  box(491, by, 250, 54, C.petrolio);
   text("TOTALE", 501, by + 29, { f: "cond", size: 20, color: C.white, ls: 20 * 0.02 });
   text(t.aliquota === null ? "IVA ESCLUSA" : "IVA INCLUSA", 501, by + 44, { f: "semibold", size: 9.06, color: C.ivaNote, ls: 9.06 * 0.1 });
   text(euro(t.totale), 733, by + 35, { f: "cond", size: 20, color: C.flare, align: "right" });
@@ -278,7 +303,7 @@ export async function buildPdf(d) {
       box(491, ay + 28, 250, 1, C.rule);
     });
     const sy = by + 54 + t.acconti.length * 29 + 1;
-    box(491, sy, 250, 54, C.ink);
+    box(491, sy, 250, 54, C.petrolio);
     text("DA SALDARE", 501, sy + 29, { f: "cond", size: 20, color: C.white, ls: 20 * 0.02 });
     text("AL NETTO DEGLI ACCONTI", 501, sy + 44, { f: "semibold", size: 9.06, color: C.ivaNote, ls: 9.06 * 0.1 });
     text(euro(t.saldo), 733, sy + 35, { f: "cond", size: 20, color: C.flare, align: "right" });
@@ -289,14 +314,14 @@ export async function buildPdf(d) {
   if (d.note && d.note.trim()) {
     const righe = wrap(d.note.trim(), CW, "regular", 11.46);
     y += 22;
-    if (y + 20 + righe.length * 18 > LIMIT) { footer(FOOT_RULE); newPage(); y = TOP; }
+    if (y + 20 + righe.length * 18 > LIM) { footer(FRULE); newPage(); y = TOP; }
     label("Note", L, y + 10);
     righe.forEach((l, i) => text(l, L, y + 29 + i * 18, { size: 11.46, color: C.cond }));
     y += 29 + (righe.length - 1) * 18 + 4;
   }
 
   /* ---------- firme ---------- */
-  if (y + 35 + 48 + 30 > 1100) { footer(FOOT_RULE); newPage(); y = TOP - 35; }
+  if (y + 35 + 48 + 30 > FIRME) { footer(FRULE); newPage(); y = TOP - 35; }
   const fy = y + 35;
   label("L'impresa", 52.9, fy);
   label(conto ? "Il committente" : "Per accettazione – il committente", 422, fy);
@@ -305,6 +330,8 @@ export async function buildPdf(d) {
   box(L, fy + 47, 319, 1, C.signLine);
   box(422, fy + 47, 319, 1, C.signLine);
   footer(fy + 48);
+  const pagine = pages.length;
+  const occupato2 = pagine === 2 ? fy + 48 + 30 - TOP : 0;  // px usati sull'ultima pagina
 
   /* ================= galleria: foto dei lavori ================= */
   const foto = d.foto || [];
@@ -314,10 +341,10 @@ export async function buildPdf(d) {
     for (const f of foto) {
       if (n % (PER * 2) === 0) {
         if (n) footer(FOOT_RULE);
-        newPage();
+        newPage(false);
         box(L, TOP, 4, 44, C.flare);
         label("Documentazione", 68.9, TOP + 13);
-        text("FOTO DEI LAVORI", 68.9, TOP + 36, { f: "cond", size: 20, color: C.ink, ls: 20 * 0.01 });
+        text("FOTO DEI LAVORI", 68.9, TOP + 36, { f: "cond", size: 20, color: C.petrolio, ls: 20 * 0.01 });
         text(foto.length === 1 ? "1 foto" : `${foto.length} foto`, R, TOP + 36, { size: 11.46, color: C.muted, align: "right" });
         y = TOP + 44 + 18;
       }
@@ -340,5 +367,6 @@ export async function buildPdf(d) {
     footer(FOOT_RULE);
   }
 
-  return doc.save();
+  if (scala < 1) pages.slice(0, pagine).forEach((pg) => pg.pushOperators(popGraphicsState()));
+  return { bytes: await doc.save(), pagine, occupato2 };
 }
