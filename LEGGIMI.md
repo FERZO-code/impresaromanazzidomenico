@@ -15,10 +15,11 @@ site/
   robots.txt  sitemap.xml  .htaccess
   assets/css/style.css
   assets/js/main.js
+  assets/js/vendor/   GSAP 3.15.1 (gsap, ScrollTrigger, SplitText)
   assets/img/photos/  35 foto × 3 misure × 2 formati (AVIF + JPEG di riserva)
   assets/img/brand/   logo RD + Fassa Bortolo, Montolit, Raimondi
 
-_build/build.py      genera le 4 pagine HTML (testi, foto, struttura)
+_build/build.py      genera tutte le pagine HTML (testi, foto, struttura)
 _versione-1/         prima versione del sito (non pubblicare)
 _versione-2/         versione brutalista prima della "posa" (non pubblicare)
 _sorgenti-originali/ immagini scaricate dal vecchio sito (non pubblicare)
@@ -145,78 +146,54 @@ statistiche rispettoso della privacy che non richiede il banner dei cookie.
 
 ## Impostazione grafica
 
-Direzione **brutalista editoriale**, ispirata alla struttura e al ritmo di
-jdgconstructions.com.au, riportata sull'identità RD:
+Restyling di novembre 2026: un'identità da **cantiere curato**, costruita sul
+mestiere e non su un modello. I riferimenti di metodo (pile di servizi,
+anteprime che seguono il cursore, piè di pagina con la parola gigante) vengono
+da 21st.dev, riscritti a mano in HTML, CSS e GSAP: nessun componente React.
 
-- **Colore** — nero `#0B0B0B`, bianco, hairline grigie, più un bianco marmo
-  `#ECE8E1` per le piastrelle. L'arancio del logo `#FF680B` è l'unico
-  accento: la piastrella di partenza, i numeri, le parole chiave.
-  Su fondo chiaro il testo arancione usa varianti più scure (`#E85400` per i
-  titoli grandi, `#B94400` per i testi piccoli) per restare leggibile.
-- **Tipografia** — Barlow Condensed per i titoli (maiuscolo, fino a 9vw) e
-  Barlow per il testo.
-- **Griglia a vista** — hairline verticali fisse che attraversano tutta la
-  pagina, come nel riferimento.
-- **Spigoli vivi** — nessun raggio di curvatura, blocchi pieni, righe nette.
-- **La posa come linguaggio** — numeri, servizi e passaggi del metodo sono
-  piastrelle separate da fughe nere di 4 px; le etichette delle sezioni
-  iniziano con un quadratino arancione al posto della lineetta.
+- **Colore** — calce `#E8E9E4` (fondo), bianco `#FAFAF7`, ardesia `#1C2226`
+  (testo), petrolio `#143039` (sezioni scure, menu, piè di pagina), cemento
+  `#5B6360` (testo secondario), velo `#A7B9BD` (testo secondario su petrolio).
+  L'arancio del logo `#FF680B` è l'unico accento; come testo su fondo chiaro
+  si usa `#B34500`. Sull'arancio il testo è sempre scuro. Contrasti verificati
+  (tutti ≥ 4,5:1).
+- **Tipografia** — Archivo a larghezza variabile: titoli stretti
+  (`font-stretch: 86%`), etichette larghe (`116%`). La parola in evidenza dei
+  titoli è in Libre Caslon Text corsivo (classe `.flare`).
+- **La crocetta** — il distanziatore delle piastrelle è la firma grafica:
+  apre le etichette, sta agli incroci delle lastre dell'hero e agli angoli
+  delle foto in galleria.
+- **Forme** — pulsanti a pastiglia con l'icona in un tondo; lastre con fughe.
 
-## L'esperienza "posa"
+## Il movimento
 
-Il filo conduttore del sito è il mestiere stesso: tutto si apre, si copre e
-si rivela come una superficie piastrellata.
+Tutto con **GSAP 3.15.1** (ScrollTrigger e SplitText), copiato nel sito in
+`site/assets/js/vendor/` e caricato senza CDN. GSAP è gratuito anche per uso
+commerciale secondo la licenza standard di GreenSock (gsap.com/standard-license).
 
-**L'apertura.** Alla prima visita della sessione lo schermo si riempie di
-piastrelle di Calacatta — un'unica foto di una vostra parete, divisa fra
-tutte, così la venatura prosegue da una piastrella all'altra. Vengono posate
-una alla volta in diagonale partendo dall'angolo in basso a sinistra, come fa
-un posatore; la prima è arancione. Al centro il logo e il contatore
-"Posa in corso 25 / 50". Quando l'ultima è a terra, le fughe si aprono e le
-piastrelle si sollevano dal centro scoprendo la home; solo allora partono i
-titoli dell'hero. Dura circa 2,5 secondi.
+**L'apertura.** Alla prima pagina della sessione una griglia di lastre petrolio,
+con il logo su una lastra arancio al centro, si posa e poi si solleva
+scoprendo la pagina. Un tocco la accelera. Non ricompare nelle pagine
+successive; `?intro` nell'indirizzo la riforza.
 
-- Si salta in ogni momento: pulsante "Salta l'apertura", un tasto qualsiasi,
-  un tocco o la rotella del mouse.
-- Una volta per sessione: aprendo altre pagine non ricompare.
-- Per rivederla c'è il link **"Rivedi l'apertura"** nel piè di pagina
-  (equivale ad aggiungere `?intro` all'indirizzo).
-- Non parte con "riduci animazioni", senza JavaScript, in navigazione privata
-  con memoria di sessione bloccata, o se la pagina è aperta in una scheda in
-  secondo piano.
-
-**Il cambio pagina.** Cliccando un link interno, piastrelle scure coprono lo
-schermo a onda partendo esattamente dal punto in cui si è cliccato (la prima,
-sotto il dito, è arancione); la pagina nuova arriva coperta e si apre dal
-centro. Funziona anche da tastiera (l'onda parte dal link). Esclusi i link
-esterni, telefono, e-mail, quelli aperti in una nuova scheda e quelli con
-tasti modificatori. Tornando indietro col browser la pagina si ripulisce.
-
-**Le immagini.** Foto dei servizi, del team, della galleria e il video sono
-coperte da tessere del colore della sezione che si sollevano in diagonale
-quando entrano nello schermo, lasciando vedere la foto attraverso le fughe
-che si allargano.
+**La home.** Hero con cinque lastre posate una alla volta (sul bagno grande,
+al passaggio del mouse, compare la foto della squadra); nastro scorrevole delle
+lavorazioni che accelera con lo scorrimento; manifesto con le parole che si
+accendono leggendo; numeri che contano; lavorazioni come lastre impilate che
+arretrano (da 1000 px); elenco lavori con anteprima che segue il cursore;
+passaggi con un filo arancione che avanza; "Romanazzi" gigante nel piè di
+pagina che sale lettera per lettera.
 
 **Gli schemi di posa.** Sezione interattiva della home: sei pulsanti —
 dritta, verticale (listelli 10x30 in piedi, tipici dei bagni), sfalsata,
-spina di pesce, diagonale, grande formato — e una tela su
-cui le stesse piastrelle si spostano, ruotano e si ridimensionano per
-ricomporre lo schema scelto; sotto la tela compaiono la descrizione e
-l'indicazione "Ideale per". La piastrella arancione al centro richiama il
-punto di partenza della posa; nel grande formato non c'è, e due venature
-attraversano le tre lastre per mostrare la venatura continua. Ogni schema è stato verificato numericamente: copre tutta
-la tela senza un buco né una sovrapposizione (30.000 punti campionati per
-schema). La sfalsata è a un terzo, non a metà, come si fa davvero sui
-formati lunghi. Senza JavaScript la sezione resta un elenco leggibile dei
-sei schemi.
+spina di pesce, diagonale, grande formato — e una tela su cui le stesse
+piastrelle si spostano per ricomporre lo schema scelto. Ogni schema copre la
+tela senza buchi né sovrapposizioni; la sfalsata è a un terzo. Senza
+JavaScript resta un elenco leggibile.
 
-### Animazioni
-
-Tutte scritte a mano, senza librerie: titoli che salgono da una maschera,
-immagini che si scoprono a tessere, contatori che scorrono, anteprima che
-segue il cursore sulle righe dei lavori, menu a schermo intero che si apre a
-tendina. La fascia arancione in scorrimento continuo è stata tolta: le linee
-guida sconsigliano animazioni decorative che non si fermano mai.
+**Regole.** Si animano solo trasformazioni e opacità. Con "riduci animazioni"
+non parte nulla e tutto è visibile; senza JavaScript tutto è visibile, e un
+timeout di 4 secondi nello script di testa scopre comunque la pagina.
 
 Nella prima schermata della home l'immagine cambia in base al dispositivo:
 
@@ -359,7 +336,7 @@ File:
 - `middleware.js`: senza login, tutto ciò che sta sotto /admin rimanda alla pagina di accesso
 - `api/login.js`, `api/logout.js`: sessione con cookie firmato (12 ore), nessun database
 - `api/leggi-conto.js`: invia la foto a Claude e restituisce i dati in JSON
-- `api/pdf.js` + `api/_lib/pdf.js`: crea il PDF (pdf-lib + fontkit), identico al modello "Preventivo - Coniugi Didonna.pdf": testata nera con logo, riquadro cliente / luogo dei lavori / date, oggetto, tabella con N., descrizione (con dettaglio in grigio), U.M. e Q.tà (prezzi per voce facoltativi), Condizioni Generali, totali con oneri per la sicurezza e firme. Caratteri Barlow e Barlow Condensed incorporati da `api/_lib/fonts/` (licenza OFL, file `OFL.txt`). Le misure del modello sono in px CSS e la larghezza delle lettere è arrotondata al pixel come fa Chrome, così righe e a capo coincidono.
+- `api/pdf.js` + `api/_lib/pdf.js`: crea il PDF (pdf-lib + fontkit), identico al modello "Preventivo - Coniugi Didonna.pdf": testata nera con logo, riquadro cliente / luogo dei lavori / date, oggetto, tabella con N., descrizione (con dettaglio in grigio), U.M. e Q.tà (prezzi per voce facoltativi), Condizioni Generali, totali con sconto facoltativo (in % o in €, sul totale lavori, prima dell'IVA; gli oneri per la sicurezza non si scontano), oneri per la sicurezza, acconti e firme. Caratteri Barlow e Barlow Condensed incorporati da `api/_lib/fonts/` (licenza OFL, file `OFL.txt`). Le misure del modello sono in px CSS e la larghezza delle lettere è arrotondata al pixel come fa Chrome, così righe e a capo coincidono.
 - `api/_lib/impresa.js`: **dati dell'impresa stampati sul PDF: inserire qui P.IVA e codice fiscale**
 - `vercel.json`: durata massima della lettura, redirect del vecchio sito e regole di cache (su Vercel il file `.htaccess` non viene usato)
 
