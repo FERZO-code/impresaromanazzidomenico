@@ -16,7 +16,7 @@ TEL_D, TEL_G = "3471769861", "3475679127"
 EMAIL = "impresaromanazzid@virgilio.it"
 IG_PROFILE = "https://www.instagram.com/impresaromanazzidomenico/"
 VIDEO_DIR = "assets/video/"
-MAILTO = "mailto:impresaromanazzid@virgilio.it?subject=Richiesta%20di%20sopralluogo&amp;body=Buongiorno%2C%0A%0Avorrei%20un%20sopralluogo%20per%3A%0A%0AAmbiente%20%28bagno%2C%20cucina%2C%20terrazzo%2C%20casa%20intera...%29%3A%20%0AMetri%20quadri%2C%20anche%20a%20occhio%3A%20%0AMateriale%20gi%C3%A0%20scelto%20%28formato%20e%20marca%29%2C%20se%20c%27%C3%A8%3A%20%0AComune%3A%20%0AQuando%20vorrei%20iniziare%3A%20%0A%0AIl%20mio%20numero%20di%20telefono%3A%20%0A"
+PREV = "contatti.html#preventivo"
 
 def esc(s): return html.escape(s, quote=True)
 def tel_fmt(t): return "%s %s %s" % (t[:3], t[3:6], t[6:])
@@ -31,6 +31,7 @@ def asset(path):
 ICONS = {
  "phone":'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>',
  "mail":'<rect x="2" y="4" width="20" height="16" rx="1"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+ "doc":'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/>',
  "arrow":'<path d="M5 12h14M13 6l6 6-6 6"/>',
  "close":'<path d="M18 6 6 18M6 6l12 12"/>',
  "left":'<path d="m15 18-6-6 6-6"/>',
@@ -226,10 +227,10 @@ def nav_overlay(current):
   <div class="wrap">
     <dl class="nav-foot">
       <div><dt>Telefono</dt><dd><a href="tel:+39%s">%s</a> · <a href="tel:+39%s">%s</a></dd></div>
-      <div><dt>E-mail</dt><dd><a href="mailto:%s">%s</a></dd></div>
+      <div><dt>Preventivo</dt><dd><a href="%s">Compila il modulo</a></dd></div>
     </dl>
   </div>
-</div>""" % (items, TEL_D, TEL_D, TEL_G, TEL_G, EMAIL, EMAIL)
+</div>""" % (items, TEL_D, TEL_D, TEL_G, TEL_G, PREV)
 
 def footer():
     links = "".join('<li><a href="%s">%s</a></li>' % (h, esc(l)) for h, l in NAV)
@@ -242,7 +243,7 @@ def footer():
       <p class="lede rise">Chiamaci e dicci cosa devi fare. Se il lavoro è nelle nostre corde te lo diciamo subito, e fissiamo il sopralluogo.</p>
       <p class="btn-row rise">
         <a class="btn btn--flare" href="tel:+39%s">%s Chiama %s</a>
-        <a class="btn btn--line" href="%s">%s Scrivi una mail</a>
+        <a class="btn btn--line" href="%s">%s Richiedi un preventivo</a>
       </p>
     </div>
     <div class="foot-grid">
@@ -263,7 +264,7 @@ def footer():
         <ul class="foot-links">
           <li><a href="tel:+39%s">Domenico · %s</a></li>
           <li><a href="tel:+39%s">Giuseppe · %s</a></li>
-          <li><a href="mailto:%s">%s</a></li>
+          <li><a href="%s">Richiedi un preventivo</a></li>
         </ul>
       </div>
     </div>
@@ -277,7 +278,7 @@ def footer():
 </footer>
 <div class="callbar" data-callbar hidden>
   <a class="btn btn--flare" href="tel:+39%s">%s Chiama</a>
-  <a class="btn btn--line" href="%s">%s Scrivi</a>
+  <a class="btn btn--line" href="%s">%s Preventivo</a>
 </div>
 <div class="peek" aria-hidden="true"><img alt="" decoding="async"></div>
 <dialog id="lightbox" class="lightbox" aria-label="Galleria fotografica">
@@ -299,9 +300,9 @@ def footer():
 <script src="%s" defer></script>
 <script src="%s" defer></script>""" % (
     lines("Parliamo del", '<span class="flare">tuo cantiere.</span>'),
-    TEL_D, icon("phone"), tel_fmt(TEL_D), MAILTO, icon("mail"), links, svc_links,
-    TEL_D, tel_fmt(TEL_D), TEL_G, tel_fmt(TEL_G), EMAIL, EMAIL,
-    TEL_D, icon("phone"), MAILTO, icon("mail"),
+    TEL_D, icon("phone"), tel_fmt(TEL_D), PREV, icon("doc"), links, svc_links,
+    TEL_D, tel_fmt(TEL_D), TEL_G, tel_fmt(TEL_G), PREV,
+    TEL_D, icon("phone"), PREV, icon("doc"),
     icon("close"), icon("left"), icon("right"),
     asset("assets/js/vendor/gsap.min.js"), asset("assets/js/vendor/ScrollTrigger.min.js"),
     asset("assets/js/vendor/SplitText.min.js"), asset("assets/js/main.js"))
@@ -1006,7 +1007,7 @@ contatti = Template("""
   <div class="wrap">
     <nav class="crumb" aria-label="Percorso"><ol><li><a href="index.html">Home</a></li><li aria-current="page">Contatti</li></ol></nav>
     <h1>$h1</h1>
-    <p class="lede rise">Niente moduli: un numero e una mail. Rispondiamo noi, non un centralino.</p>
+    <p class="lede rise">Una telefonata o due righe nel modulo qui sotto. Rispondiamo noi, non un centralino.</p>
   </div>
 </section>
 
@@ -1025,13 +1026,6 @@ contatti = Template("""
         <dd>
           <a class="big" href="tel:+39$tel2">$tel2f</a>
           <p class="note">Giuseppe. Da provare quando il primo squilla a vuoto: vuol dire che siamo sotto una lastra.</p>
-        </dd>
-      </div>
-      <div class="contact-row rise">
-        <dt>E-mail</dt>
-        <dd>
-          <a class="big" href="$mailto">$email</a>
-          <p class="note">Il messaggio si apre già impostato con le domande che ci servono: compila le righe e allega qualche foto degli ambienti.</p>
         </dd>
       </div>
       <div class="contact-row rise">
@@ -1056,6 +1050,42 @@ contatti = Template("""
   </div>
 </section>
 
+<section class="sec quote" id="preventivo" aria-labelledby="prev-h">
+  <div class="wrap quote-grid">
+    <div class="quote-intro">
+      <p class="label rise">Richiedi un preventivo</p>
+      <h2 id="prev-h" style="font-size:var(--d-2);margin:24px 0">$h2p</h2>
+      <p class="lede rise">Raccontaci il lavoro in poche righe: ti richiamiamo noi per fissare il sopralluogo. Il preventivo è gratuito e senza impegno.</p>
+      <p class="note rise">Solo nome e telefono sono obbligatori.</p>
+    </div>
+    <form class="quote-form rise" method="post" action="/api/richieste" data-quote novalidate>
+      <p class="quote-ok" data-quote-ok role="status" hidden><b>Richiesta inviata.</b> Grazie: ti richiamiamo entro un giorno lavorativo.</p>
+      <div class="qf-grid">
+        <label class="qf"><span>Nome e cognome *</span><input name="nome" autocomplete="name" required maxlength="120"></label>
+        <label class="qf"><span>Telefono *</span><input name="telefono" type="tel" inputmode="tel" autocomplete="tel" required maxlength="40"></label>
+        <label class="qf"><span>E-mail</span><input name="email" type="email" autocomplete="email" maxlength="160"></label>
+        <label class="qf"><span>Comune del cantiere</span><input name="comune" autocomplete="address-level2" maxlength="80"></label>
+      </div>
+      <fieldset class="qf-chips">
+        <legend>Che lavoro è</legend>
+        $chips
+      </fieldset>
+      <div class="qf-grid">
+        <label class="qf"><span>Metri quadri, anche a occhio</span><input name="mq" inputmode="decimal" maxlength="20" placeholder="es. 40"></label>
+        <label class="qf"><span>Quando vorresti partire</span>
+          <select name="quando"><option value="">Non so ancora</option><option>Entro un mese</option><option>Fra 1 e 3 mesi</option><option>Fra più di 3 mesi</option></select>
+        </label>
+      </div>
+      <label class="qf"><span>Descrivi il lavoro</span><textarea name="messaggio" rows="5" maxlength="3000" placeholder="Ambiente, materiale già scelto (formato e marca), stato attuale…"></textarea></label>
+      <label class="qf-hp" aria-hidden="true">Sito web<input name="sito" tabindex="-1" autocomplete="off"></label>
+      <input type="hidden" name="t" value="">
+      <label class="qf-check"><input type="checkbox" name="privacy" required> <span>Acconsento al trattamento dei dati per essere ricontattato. I dati restano all'Impresa Romanazzi Domenico, servono solo per rispondere a questa richiesta e non vengono ceduti a nessuno.</span></label>
+      <p class="quote-err" data-quote-err role="alert" hidden></p>
+      <p class="qf-send"><button class="btn btn--flare" type="submit">$ico Invia la richiesta</button></p>
+    </form>
+  </div>
+</section>
+
 <section class="sec" aria-labelledby="prep-h">
   <div class="wrap">
     <p class="label rise">Prima di chiamare</p>
@@ -1070,12 +1100,15 @@ contatti = Template("""
   </div>
 </section>
 """).substitute(h1=lines("Parliamo", '<span class="flare">di lavoro.</span>'),
-                tel1=TEL_D, tel2=TEL_G, tel1f=tel_fmt(TEL_D), tel2f=tel_fmt(TEL_G), email=EMAIL, mailto=MAILTO,
+                tel1=TEL_D, tel2=TEL_G, tel1f=tel_fmt(TEL_D), tel2f=tel_fmt(TEL_G),
+                h2p=lines("Due righe,", '<span class="flare">ti richiamiamo.</span>'), ico=icon("arrow"),
+                chips="".join('<label><input type="radio" name="lavoro" value="%s"%s><span>%s</span></label>' % (x, " checked" if i == 0 else "", x)
+                              for i, x in enumerate(["Pavimenti e rivestimenti", "Bagno completo", "Massetti", "Impermeabilizzazioni", "Grandi formati", "Altro"])),
                 h2=lines("Quattro cose", "da avere sotto mano."))
 
 write("contatti.html", page(
   "Contatti e preventivi | Piastrellista a Rutigliano (BA)",
-  "Chiama il 347 176 9861 o scrivi a impresaromanazzid@virgilio.it per un sopralluogo e un preventivo: piastrellisti a Rutigliano e provincia di Bari.",
+  "Chiama il 347 176 9861 o compila il modulo per un sopralluogo e un preventivo gratuito: piastrellisti a Rutigliano e provincia di Bari.",
   "contatti.html", contatti, og="calacatta-rubinetteria-01",
   ld=LD + "\n" + ld_block(breadcrumb([("Home", ""), ("Contatti", "contatti.html")]))))
 

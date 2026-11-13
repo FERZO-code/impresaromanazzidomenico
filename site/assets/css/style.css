@@ -603,6 +603,41 @@ html.has-callbar { scroll-padding-bottom: 90px; }
 html.has-callbar .site-footer { padding-bottom: 74px; }
 @media (min-width: 760px) { .callbar { display: none !important; } }
 
+
+/* ---------- Modulo "Richiedi un preventivo" (Contatti) ---------- */
+.quote { scroll-margin-top: var(--bar-h); }
+.quote-grid { display: grid; gap: clamp(32px, 5vw, 80px); }
+@media (min-width: 1000px) { .quote-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } .quote-intro { position: sticky; top: calc(var(--bar-h) + 32px); } }
+.quote-intro .note { color: var(--cemento); font-size: var(--t-sm); margin-top: var(--s3); }
+.quote-form { display: grid; gap: 18px; background: var(--bianco); border: 1px solid var(--fuga); border-radius: calc(var(--r) * 3); padding: clamp(20px, 3vw, 40px); }
+.qf-grid { display: grid; gap: 18px; }
+@media (min-width: 640px) { .qf-grid { grid-template-columns: 1fr 1fr; } }
+.qf { display: grid; gap: 7px; }
+.qf > span, .qf-chips legend { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; font-stretch: 116%; color: var(--cemento); }
+.qf input, .qf select, .qf textarea { width: 100%; font: inherit; font-size: 1rem; color: var(--ardesia); background: var(--calce); border: 1px solid transparent; border-radius: 10px; padding: 13px 14px; transition: border-color 200ms var(--ease), background 200ms var(--ease); }
+.qf textarea { resize: vertical; min-height: 120px; }
+.qf input:focus, .qf select:focus, .qf textarea:focus { outline: none; border-color: var(--ardesia); background: var(--bianco); }
+.qf input[aria-invalid="true"] { border-color: #B3261E; }
+.qf-chips { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.qf-chips legend { margin-bottom: 9px; padding: 0; }
+.qf-chips label { cursor: pointer; }
+.qf-chips input { position: absolute; opacity: 0; pointer-events: none; }
+.qf-chips span { display: inline-block; padding: 9px 15px; border-radius: 999px; border: 1px solid var(--fuga); font-size: .92rem; transition: background 200ms var(--ease), border-color 200ms var(--ease), color 200ms var(--ease); }
+.qf-chips label:hover span { border-color: var(--ardesia); }
+.qf-chips input:checked + span { background: var(--ardesia); border-color: var(--ardesia); color: var(--bianco); }
+.qf-chips input:focus-visible + span { outline: 3px solid var(--arancio); outline-offset: 2px; }
+.qf-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.qf-check { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: var(--t-sm); color: var(--cemento); line-height: 1.45; cursor: pointer; }
+.qf-check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--arancio); }
+.qf-send { margin: 4px 0 0; }
+.qf-send .btn { width: 100%; justify-content: center; }
+@media (min-width: 640px) { .qf-send .btn { width: auto; } }
+.quote-form.is-sending .qf-send .btn { opacity: .6; pointer-events: none; }
+.quote-err { margin: 0; color: #B3261E; font-size: var(--t-sm); }
+.quote-ok { margin: 0; padding: 16px 18px; border-radius: 10px; background: var(--petrolio); color: var(--bianco); }
+.quote-ok b { color: var(--arancio); }
+.quote-form.is-sent > :not(.quote-ok) { display: none; }
+
 /* ---------- Stampa e movimento ridotto ---------- */
 @media print {
   .intro, .peek, .callbar, .site-bar, .nastro { display: none !important; }

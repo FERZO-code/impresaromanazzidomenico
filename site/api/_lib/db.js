@@ -31,6 +31,9 @@ async function db() {
         id text PRIMARY KEY, tipo text NOT NULL, data text, cliente_id text, cliente_nome text,
         oggetto text, totale numeric, dati jsonb NOT NULL,
         creato timestamptz NOT NULL DEFAULT now(), aggiornato timestamptz NOT NULL DEFAULT now())`;
+      await sql`CREATE TABLE IF NOT EXISTS richieste (
+        id text PRIMARY KEY, stato text NOT NULL DEFAULT 'nuova', dati jsonb NOT NULL,
+        creato timestamptz NOT NULL DEFAULT now())`;
     })().catch((e) => { pronto = null; throw e; });
   }
   await pronto;
@@ -38,7 +41,7 @@ async function db() {
 }
 
 /* ---------- memoria (solo prove locali) ---------- */
-const MEM = { clienti: new Map(), documenti: new Map() };
+const MEM = { clienti: new Map(), documenti: new Map(), richieste: new Map() };
 const mem = () => process.env.RD_DB_MEMORY && !URL_DB();
 
 /* ---------- clienti ---------- */
@@ -95,5 +98,30 @@ export async function eliminaDocumento(id) {
   if (mem()) return MEM.documenti.delete(id);
   const s = await db();
   const r = await s`DELETE FROM documenti WHERE id = ${id} RETURNING id`;
+  return r.length > 0;
+}
+
+/* ---------- richieste di preventivo dal sito ---------- */
+export async function salvaRichiesta(r) {
+  if (mem()) { MEM.richieste.set(r.id, { ...r, stato: "nuova", creato: new Date().toISOString() }); return; }
+  const s = await db();
+  await s`INSERT INTO richieste (id, dati) VALUES (${r.id}, ${JSON.stringify(r)}::jsonb)`;
+}
+export async function listaRichieste() {
+  if (mem()) return [...MEM.richieste.values()].sort((a, b) => b.creato.localeCompare(a.creato));
+  const s = await db();
+  const rows = await s`SELECT id, stato, dati, creato FROM richieste ORDER BY creato DESC LIMIT 500`;
+  return rows.map((r) => ({ ...r.dati, id: r.id, stato: r.stato, creato: new Date(r.creato).toISOString() }));
+}
+export async function statoRichiesta(id, stato) {
+  if (mem()) { const r = MEM.richieste.get(id); if (r) r.stato = stato; return Boolean(r); }
+  const s = await db();
+  const r = await s`UPDATE richieste SET stato = ${stato} WHERE id = ${id} RETURNING id`;
+  return r.length > 0;
+}
+export async function eliminaRichiesta(id) {
+  if (mem()) return MEM.richieste.delete(id);
+  const s = await db();
+  const r = await s`DELETE FROM richieste WHERE id = ${id} RETURNING id`;
   return r.length > 0;
 }

@@ -227,3 +227,9 @@ h2 { font-size: 1.6rem; }
 
 /* sconto: valore + tipo (% o €) sulla stessa riga */
 .sconto { display: grid; grid-template-columns: 1fr 76px; gap: 8px; }
+
+/* richieste dal sito */
+.card.is-new { border-color: var(--flare, #FF680B); }
+.badge { display: inline-block; margin-left: 10px; padding: 2px 9px; border-radius: 999px; background: #FF680B; color: #14100D; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; vertical-align: middle; }
+.badge--ok { background: #dfe6e0; color: #1f3a2a; }
+.card .msg { white-space: pre-wrap; }

@@ -569,6 +569,23 @@
     });
   }
 
+  /* Arrivo da una richiesta del sito con "Crea preventivo": /admin/?richiesta=1 */
+  if (new URLSearchParams(location.search).get('richiesta')) {
+    var rq = null;
+    try { rq = JSON.parse(sessionStorage.getItem('rd-richiesta') || 'null'); sessionStorage.removeItem('rd-richiesta'); } catch (e) { rq = null; }
+    history.replaceState(null, '', '/admin/');
+    if (rq) {
+      var mq = parseFloat(String(rq.mq || '').replace(',', '.'));
+      apriEditor({
+        tipo: 'preventivo',
+        cliente: { nome: rq.nome || '', telefono: rq.telefono || '', indirizzo: rq.comune || '' },
+        oggetto: rq.lavoro && rq.lavoro !== 'Altro' ? rq.lavoro : '',
+        cantiere: rq.comune || '',
+        voci: [{ descrizione: rq.lavoro && rq.lavoro !== 'Altro' ? rq.lavoro : '', unita: isFinite(mq) ? 'mq' : '', quantita: isFinite(mq) ? mq : null }],
+      });
+    }
+  }
+
   /* ---------- archivio: salvataggio e riapertura dei documenti ---------- */
   function statoDoc(t, ok) { var el = $('#stato-doc'); el.textContent = t || ''; el.classList.toggle('ok', !!ok); }
   function salvaDocumento() {

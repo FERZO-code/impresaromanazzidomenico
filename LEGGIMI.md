@@ -385,3 +385,15 @@ I sitelink compaiono di solito quando qualcuno cerca il nome dell'impresa, dopo 
 **Menu visibile in barra (computer).** Da 1100 px di larghezza la barra in alto mostra Lavorazioni (con tendina sulle 4 pagine di servizio), Lavori, Impresa e Contatti, oltre al telefono e al pulsante del menù a schermo intero. Sotto 1100 px resta solo il pulsante. Sono link normali già presenti nel codice di ogni pagina (`bar_nav()` in `build.py`, stile in `style.css`, apertura della tendina in `main.js`); la voce della pagina corrente è sottolineata.
 
 **Massetti.** La pagina Massetti e il riquadro in home parlano ora anche di massetti autolivellanti e solette alleggerite (titolo, descrizione, testi, passaggi, due nuove domande frequenti e dati strutturati per Google).
+
+## Richieste di preventivo dal sito
+
+Nella pagina Contatti (`contatti.html#preventivo`) c'è il modulo "Richiedi un preventivo"; i pulsanti "Preventivo" della callbar e del piè di pagina portano lì. L'e-mail non è più proposta come contatto (resta solo nei dati strutturati per Google e per le candidature).
+
+- `api/richieste.js`: riceve il modulo (anche senza JavaScript), lo salva nella tabella `richieste` di Neon (creata da sola) e manda l'avviso per e-mail. Basta che riesca una delle due cose. Protezione dai robot: campo nascosto e tempo minimo di compilazione.
+- `api/_lib/avviso.js`: avviso con **Resend**. Variabili su Vercel:
+  - `RESEND_API_KEY` (obbligatoria) — resend.com → API Keys.
+  - `RESEND_FROM` — mittente su un dominio verificato in Resend, es. `Sito Romanazzi <richieste@impresaromanazzidomenico.it>` (Resend → Domains → aggiungi il dominio e inserisci i record DNS indicati). Senza dominio verificato Resend usa `onboarding@resend.dev`, che consegna **solo** all'indirizzo con cui è registrato l'account Resend.
+  - `RICHIESTE_EMAIL` (facoltativa) — destinatario; predefinito `impresaromanazzid@virgilio.it`.
+  Rispondendo all'e-mail di avviso si scrive direttamente al cliente, se ha lasciato l'indirizzo.
+- Area riservata → **Richieste**: elenco, stato (nuova / gestita), eliminazione e "Crea preventivo", che apre il modulo con cliente, comune, lavoro e metri quadri già compilati.

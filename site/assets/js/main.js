@@ -618,6 +618,43 @@
     syncBar();
   }
 
+
+  /* ---------- Modulo "Richiedi un preventivo" ----------
+     Senza JavaScript il modulo si invia normalmente e l'API rimanda a
+     contatti.html?inviata=1; con JavaScript si invia senza lasciare la pagina. */
+  var quote = document.querySelector('[data-quote]');
+  if (quote) {
+    var okBox = quote.querySelector('[data-quote-ok]');
+    var errBox = quote.querySelector('[data-quote-err]');
+    quote.elements.t.value = String(Date.now());
+    var mostraOk = function () { quote.classList.add('is-sent'); okBox.hidden = false; okBox.setAttribute('tabindex', '-1'); okBox.focus(); };
+    var qs0 = new URLSearchParams(location.search);
+    if (qs0.get('inviata')) mostraOk();
+    else if (qs0.get('errore')) { errBox.textContent = 'Invio non riuscito: controlla nome, telefono e consenso, oppure chiamaci al 347 176 9861.'; errBox.hidden = false; }
+    var errore = function (msg, campo) {
+      errBox.textContent = msg; errBox.hidden = false;
+      if (campo) { campo.setAttribute('aria-invalid', 'true'); campo.focus(); }
+    };
+    quote.addEventListener('input', function (e) { e.target.removeAttribute('aria-invalid'); });
+    quote.addEventListener('submit', function (e) {
+      e.preventDefault();
+      errBox.hidden = true;
+      var f = quote.elements;
+      if (!f.nome.value.trim()) return errore('Scrivi il tuo nome.', f.nome);
+      if (f.telefono.value.replace(/\D/g, '').length < 6) return errore('Serve un numero di telefono per richiamarti.', f.telefono);
+      if (f.email.value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.value)) return errore('L\'indirizzo e-mail non sembra corretto.', f.email);
+      if (!f.privacy.checked) return errore('Serve il consenso per poterti ricontattare.', f.privacy);
+      var dati = Object.fromEntries(new FormData(quote).entries());
+      dati.privacy = true;
+      quote.classList.add('is-sending');
+      fetch(quote.action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dati) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (x) { if (x.ok) mostraOk(); else errore(x.j.errore || 'Invio non riuscito.'); })
+        .catch(function () { errore('Connessione assente. Riprova o chiamaci al 347 176 9861.'); })
+        .then(function () { quote.classList.remove('is-sending'); });
+    });
+  }
+
   /* =========================================================
      MOVIMENTO — GSAP
      Durate e curve in un posto solo, così il sito si muove tutto
@@ -776,9 +813,9 @@
     /* telefono: scorrendo la foto rallenta e il testo sale un po' più in fretta */
     mm.add('(max-width: 759.98px)', function () {
       var hero = heroPosa.closest('.hero');
-      G.to(heroPosa.querySelector('.lastra--a'), { yPercent: 18, ease: 'none',
+      G.fromTo(heroPosa.querySelector('.lastra--a'), { yPercent: 0 }, { yPercent: 18, ease: 'none', immediateRender: false,
         scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
-      G.to(hero.querySelector('.hero-copy'), { y: -32, autoAlpha: 0.55, ease: 'none',
+      G.fromTo(hero.querySelector('.hero-copy'), { y: 0, autoAlpha: 1 }, { y: -32, autoAlpha: 0.55, ease: 'none', immediateRender: false,
         scrollTrigger: { trigger: hero, start: '55% top', end: 'bottom top', scrub: true } });
     });
   }
