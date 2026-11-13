@@ -592,6 +592,12 @@
   var bar = document.querySelector('.site-bar');
   if (bar) {
     var darkZones = Array.prototype.slice.call(document.querySelectorAll('.sec--dark, .site-footer'));
+    /* su telefono l'hero è la foto a tutto schermo: barra chiara sopra */
+    var heroSec = document.querySelector('.hero');
+    var phone = window.matchMedia('(max-width: 759.98px)');
+    if (heroSec) darkZones = darkZones.concat({ getBoundingClientRect: function () {
+      return phone.matches ? heroSec.getBoundingClientRect() : { top: 1, bottom: 0 };
+    } });
     var lastY = window.pageYOffset;
     var syncBar = throttled(function () {
       var y = window.pageYOffset;
@@ -643,7 +649,12 @@
       .from(scope.querySelectorAll('.lede, .hero-cta, .btn-row'), { autoAlpha: 0, y: 24, duration: 0.95, stagger: 0.09, ease: EASE }, 0.35);
 
     var lastre = scope.querySelectorAll('.lastra');
-    if (lastre.length) {
+    if (lastre.length && window.matchMedia('(max-width: 759.98px)').matches) {
+      /* telefono: la foto si assesta dall'ingrandimento, poi arriva il tassello */
+      tl.from(scope.querySelector('.lastra--a img'), { scale: 1.22, duration: 2.2, ease: 'expo.out' }, 0)
+        .from(scope.querySelector('.lastra--a'), { autoAlpha: 0, duration: 0.9, ease: 'power2.out' }, 0)
+        .from(scope.querySelector('.lastra--d'), { autoAlpha: 0, y: -16, duration: 0.9, ease: EASE }, 0.7);
+    } else if (lastre.length) {
       /* le lastre vengono posate una alla volta: arrivano dall'alto, appena
          ruotate, e si assestano; per ultime entrano le crocette */
       var tilt = [-2.5, 2, -1.5, 2.5, -2];
@@ -761,6 +772,14 @@
         yPercent: 5, scale: 1.12, ease: 'none',
         scrollTrigger: { trigger: heroPosa, start: 'top bottom', end: 'bottom top', scrub: 0.6 }
       });
+    });
+    /* telefono: scorrendo la foto rallenta e il testo sale un po' più in fretta */
+    mm.add('(max-width: 759.98px)', function () {
+      var hero = heroPosa.closest('.hero');
+      G.to(heroPosa.querySelector('.lastra--a'), { yPercent: 18, ease: 'none',
+        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
+      G.to(hero.querySelector('.hero-copy'), { y: -32, autoAlpha: 0.55, ease: 'none',
+        scrollTrigger: { trigger: hero, start: '55% top', end: 'bottom top', scrub: true } });
     });
   }
 

@@ -321,11 +321,33 @@ body.is-intro { overflow: hidden; }
   .hero-hint { display: inline-flex; position: absolute; left: 12px; bottom: 12px; z-index: 2; padding: 7px 12px; border-radius: 999px; background: rgba(20, 30, 34, .62); backdrop-filter: blur(8px); color: #fff; font-size: .78rem; transition: opacity 300ms var(--ease); }
   .lastra--a:hover .hero-hint { opacity: 0; }
 }
-/* telefono: una lastra sola, la squadra */
+/* telefono: la squadra a tutto schermo, il titolo posato sopra.
+   La foto riempie l'hero; una velatura petrolio sale dal fondo e scende
+   dall'alto (sotto la barra), così il testo chiaro legge su qualsiasi zona. */
 @media (max-width: 759.98px) {
-  .hero-posa { display: block; aspect-ratio: auto; }
-  .lastra--a { aspect-ratio: 4 / 4.6; }
-  .lastra--b, .lastra--c, .lastra--d, .lastra--e, .hero-posa .croce, .lastra .hero-alt { display: none; }
+  .hero { min-height: 100svh; padding: 0; display: flex; flex-direction: column; justify-content: flex-end; background: var(--petrolio); color: var(--bianco); isolation: isolate; }
+  .hero-inner { display: block; position: static; padding-top: calc(var(--bar-h) + 26svh); padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .hero-posa { position: absolute; inset: 0; z-index: -1; display: block; aspect-ratio: auto; }
+  .lastra--a { position: absolute; inset: 0; border-radius: 0; background: var(--petrolio); }
+  .lastra--a img { object-position: 50% 18%; }
+  .lastra--a::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(20, 48, 57, .72) 0, rgba(20, 48, 57, 0) 20%),
+      linear-gradient(180deg, rgba(20, 48, 57, 0) 30%, rgba(20, 48, 57, .74) 48%, rgba(20, 48, 57, .97) 66%, var(--petrolio) 100%); }
+  .lastra--b, .lastra--c, .lastra--e, .hero-posa .croce, .lastra .hero-alt { display: none; }
+
+  /* il tassello arancio: 25 anni, posato in alto a destra */
+  .lastra--d { position: absolute; z-index: 1; left: var(--gutter); top: calc(var(--bar-h) + 10px); width: auto; padding: 9px 13px 9px 11px; border-radius: 999px; background: rgba(20, 48, 57, .55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: var(--bianco); flex-direction: row; align-items: center; gap: 8px; border: 1px solid rgba(255, 255, 255, .18); }
+  .lastra--d .label { color: var(--bianco); font-size: .66rem; margin: 0; }
+  .lastra--d p:last-child { display: none; }
+  .hero-copy > .label { display: none; } /* già detto dalla barra e dal tassello */
+  .hero h1 { color: var(--bianco); font-size: clamp(3.1rem, 15.5vw, 4.6rem); margin-block: 0 18px; }
+  .hero h1 .flare { color: var(--arancio); }
+  .hero-copy .lede { color: rgba(250, 250, 247, .82); font-size: 1rem; line-height: 1.5; }
+  .hero-cta { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 26px; }
+  .hero-cta .btn { width: 100%; justify-content: flex-start; }
+  .hero-cta .btn--line { color: var(--bianco); border-color: rgba(255, 255, 255, .45); }
+  .hero-cta .btn--line .ico { background: var(--bianco); color: var(--petrolio); }
 }
 
 /* ---------- Nastro delle lavorazioni ---------- */
