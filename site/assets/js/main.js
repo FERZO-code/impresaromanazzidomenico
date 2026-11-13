@@ -1,11 +1,13 @@
-/* Impresa Romanazzi Domenico — interazioni
-   Apertura e cambio pagina a piastrelle · nav a schermo intero · comparse
-   allo scorrimento con tessere sulle immagini · contatori · schemi di posa
-   · anteprima progetti · video · filtri galleria · lightbox accessibile
-   Regola di base: senza JS, o se qualcosa non parte, tutto resta visibile. */
+/* Impresa Romanazzi Domenico — interazioni e movimento
+   Menu · video · schemi di posa · galleria e lightbox · barra di chiamata,
+   e tutto il movimento con GSAP: apertura, comparse allo scorrimento,
+   lastre impilate, nastro, anteprima dei lavori.
+   Regola di base: senza script, o con "riduci movimento", tutto resta
+   visibile e fermo. */
 (function () {
   'use strict';
 
+  var root = document.documentElement;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   var animate = document.documentElement.classList.contains('js-anim');
 
@@ -58,245 +60,6 @@
   }
   if (reduce.matches || document.visibilityState !== 'visible') stopAnimating();
   window.addEventListener('beforeprint', stopAnimating);
-
-  /* =========================================================
-     La posa: apertura a piastrelle e cambio pagina
-     Lo script in testa alla pagina decide se serve (data-tiling) e
-     stende un velo nero; qui si costruiscono le piastrelle.
-     Ogni fase è a tempo (setTimeout), mai legata alla fine di
-     un'animazione: se un'animazione non parte, lo stato finale arriva
-     comunque e la pagina non resta mai coperta.
-     ========================================================= */
-  var root = document.documentElement;
-  var tilingMode = root.classList.contains('rd-cover') ? root.getAttribute('data-tiling') : null;
-  if (!animate) { root.classList.remove('rd-cover'); tilingMode = null; }
-  var opened = !tilingMode;
-  var openQueue = [];
-
-  /* ciò che deve partire quando la pagina si scopre (titoli, zoom dell'hero) */
-  function whenOpen(fn) { if (opened) fn(); else openQueue.push(fn); }
-  function markOpen() {
-    if (opened) return;
-    opened = true;
-    openQueue.splice(0).forEach(function (fn) {
-      try { fn(); } catch (e) { /* una funzione rotta non deve bloccare le altre */ }
-    });
-  }
-
-  /* sessionStorage può mancare (navigazione privata, cookie bloccati) */
-  function store(key, val) {
-    try {
-      if (val === null) window.sessionStorage.removeItem(key);
-      else window.sessionStorage.setItem(key, val);
-      return true;
-    } catch (e) { return false; }
-  }
-
-  var MARBLE = 'assets/img/photos/calacatta-parete-01-md.jpg';
-
-  function buildTiling(kind) {
-    var vw = window.innerWidth, vh = window.innerHeight;
-    var size = vw < 760 ? 96 : 132;
-    var cols = Math.max(4, Math.round(vw / size));
-    var rows = Math.max(4, Math.round(vh / size));
-    var el = document.createElement('div');
-    el.className = 'tiling tiling--' + kind;
-    var grid = document.createElement('div');
-    grid.className = 'tiling-grid';
-    grid.setAttribute('aria-hidden', 'true');
-    grid.style.setProperty('--cols', cols);
-    grid.style.setProperty('--rows', rows);
-    /* indirizzo assoluto: un url() dentro una variabile CSS verrebbe risolto
-       rispetto al foglio di stile, non alla pagina */
-    if (kind === 'intro') grid.style.setProperty('--marble-img', 'url("' + new URL(MARBLE, document.baseURI).href + '")');
-    var cells = [];
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        var i = document.createElement('i');
-        i.style.setProperty('--c', c);
-        i.style.setProperty('--r', r);
-        grid.appendChild(i);
-        cells.push({ el: i, c: c, r: r });
-      }
-    }
-    el.appendChild(grid);
-    document.body.appendChild(el);
-    return { el: el, grid: grid, cells: cells, cols: cols, rows: rows };
-  }
-
-  /* ritardi a onda: più una piastrella è lontana dall'origine, più aspetta */
-  function wave(t, prop, ox, oy, spread) {
-    var far = 0;
-    t.cells.forEach(function (cell) {
-      far = Math.max(far, Math.sqrt((cell.c - ox) * (cell.c - ox) + (cell.r - oy) * (cell.r - oy)));
-    });
-    var step = spread / (far || 1), max = 0;
-    t.cells.forEach(function (cell) {
-      var d = Math.round(Math.sqrt((cell.c - ox) * (cell.c - ox) + (cell.r - oy) * (cell.r - oy)) * step);
-      cell.el.style.setProperty(prop, d + 'ms');
-      if (d > max) max = d;
-    });
-    return max;
-  }
-
-  function finish(t) {
-    if (t.el.parentNode) t.el.parentNode.removeChild(t.el);
-    document.body.classList.remove('is-tiling');
-  }
-
-  function openTiling(t, fast) {
-    var max = wave(t, '--open', (t.cols - 1) / 2, (t.rows - 1) / 2, fast ? 200 : 420);
-    if (fast) t.el.classList.add('is-fast');
-    t.el.classList.add('is-opening');
-    markOpen();
-    window.setTimeout(function () { finish(t); }, max + (fast ? 300 : 520) + 80);
-  }
-
-  /* Prima visita della sessione: le piastrelle vengono posate una alla volta,
-     partendo dall'angolo in basso a sinistra come farebbe un posatore,
-     poi si sollevano dal centro e scoprono il sito. Saltabile in ogni
-     momento: un tasto, un tocco, la rotella, o il pulsante. */
-  function runIntro() {
-    store('rd-intro', '1');
-    store('rd-nav', null);
-    var t = buildTiling('intro');
-    root.classList.remove('rd-cover');
-    document.body.classList.add('is-tiling');
-
-    var total = t.cells.length;
-    var LAY = 1000;
-    var maxK = (t.cols - 1) + (t.rows - 1) || 1;
-    t.cells.forEach(function (cell) {
-      cell.lay = Math.round((cell.c + (t.rows - 1 - cell.r)) / maxK * LAY);
-      cell.el.style.setProperty('--lay', cell.lay + 'ms');
-    });
-    t.cells[(t.rows - 1) * t.cols].el.classList.add('is-origin');
-
-    var badge = document.createElement('div');
-    badge.className = 'tiling-badge';
-    badge.setAttribute('aria-hidden', 'true');
-    badge.innerHTML =
-      '<div class="tb-brand"><img src="assets/img/brand/logo-rd.png" width="44" height="44" alt="">' +
-      '<div><b>Romanazzi Domenico</b><small>Piastrellisti e posatori</small></div></div>' +
-      '<p class="tb-count"><span>Posa in corso</span><strong><span data-n>00</span> / ' + total + '</strong></p>' +
-      '<div class="tb-bar"><i></i></div>';
-    t.el.appendChild(badge);
-    var counter = badge.querySelector('[data-n]');
-    var progress = badge.querySelector('.tb-bar i');
-
-    var skip = document.createElement('button');
-    skip.type = 'button';
-    skip.className = 'tiling-skip';
-    skip.textContent = 'Salta l\'apertura';
-    t.el.appendChild(skip);
-
-    var t0 = Date.now();
-    var timers = [];
-    var done = false;
-    var SKIP_EVENTS = ['keydown', 'wheel', 'touchmove', 'pointerdown'];
-
-    var paint = function (n) {
-      counter.textContent = (n < 10 ? '0' : '') + n;
-      progress.style.setProperty('--p', n / total);
-    };
-    var tick = function () {
-      var elapsed = Date.now() - t0, n = 0;
-      for (var i = 0; i < t.cells.length; i++) if (t.cells[i].lay + 190 <= elapsed) n++;
-      paint(n);
-      if (n < total && !done) timers.push(window.setTimeout(tick, 50));
-    };
-    var onSkip = function (e) {
-      if (e.type === 'keydown' && /^(Shift|Control|Alt|Meta)$/.test(e.key)) return;
-      open(true);
-    };
-    var open = function (fast) {
-      if (done) return;
-      done = true;
-      timers.forEach(window.clearTimeout);
-      SKIP_EVENTS.forEach(function (ev) { window.removeEventListener(ev, onSkip, true); });
-      paint(total);
-      openTiling(t, fast);
-      /* ?intro serve solo a rivederla: non deve ripartire a ogni ricarica */
-      if (/[?&]intro(=|&|$)/.test(window.location.search) && window.history.replaceState) {
-        window.history.replaceState(null, '', window.location.pathname + window.location.hash);
-      }
-    };
-
-    skip.addEventListener('click', function () { open(true); });
-    SKIP_EVENTS.forEach(function (ev) { window.addEventListener(ev, onSkip, { capture: true, passive: true }); });
-
-    t.grid.classList.add('is-laying');
-    tick();
-    timers.push(window.setTimeout(function () { open(false); }, LAY + 380 + 260));
-  }
-
-  /* Arrivo da un'altra pagina del sito: si parte coperti e si apre dal centro */
-  function runArrive() {
-    store('rd-nav', null);
-    var t = buildTiling('cover');
-    t.el.classList.add('is-covered');
-    root.classList.remove('rd-cover');
-    document.body.classList.add('is-tiling');
-    window.setTimeout(function () { openTiling(t, false); }, 60);
-  }
-
-  /* Uscita verso un'altra pagina: le piastrelle si posano a onda partendo
-     dal punto in cui si è cliccato, e solo dopo si cambia pagina. */
-  function leaveTo(href, x, y) {
-    var t = buildTiling('cover');
-    document.body.classList.add('is-tiling');
-    var ox = Math.min(t.cols - 1, Math.max(0, Math.floor(x / (window.innerWidth / t.cols))));
-    var oy = Math.min(t.rows - 1, Math.max(0, Math.floor(y / (window.innerHeight / t.rows))));
-    var max = wave(t, '--in', ox, oy, 300);
-    t.cells[oy * t.cols + ox].el.classList.add('is-origin');
-    t.el.classList.add('is-closing');
-    window.setTimeout(function () {
-      t.el.classList.add('is-covered');
-      store('rd-nav', '1');
-      window.location.href = href;
-    }, max + 340);
-    /* se la nuova pagina non arriva (navigazione annullata), si torna liberi */
-    window.setTimeout(function () { store('rd-nav', null); finish(t); }, max + 6000);
-  }
-
-  if (tilingMode === 'intro') runIntro();
-  else if (tilingMode === 'arrive') runArrive();
-
-  /* cambio pagina a piastrelle solo per i link interni a pagine del sito,
-     e solo se possiamo ricordarcelo fra una pagina e l'altra */
-  if (animate && store('rd-probe', '1') && store('rd-probe', null)) {
-    document.addEventListener('click', function (e) {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      var a = e.target.closest && e.target.closest('a[href]');
-      if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
-      var raw = a.getAttribute('href');
-      if (!raw || raw.charAt(0) === '#') return;
-      var url;
-      try { url = new URL(a.href, window.location.href); } catch (err) { return; }
-      if (url.origin !== window.location.origin) return;
-      if (!/(\.html|\/)$/.test(url.pathname)) return;
-      if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return;
-      e.preventDefault();
-      var x = e.clientX, y = e.clientY;
-      if (!e.detail) { /* attivato da tastiera: l'onda parte dal link */
-        var rect = a.getBoundingClientRect();
-        x = rect.left + rect.width / 2; y = rect.top + rect.height / 2;
-      }
-      leaveTo(url.href, x, y);
-    });
-  }
-
-  /* tornando indietro, il browser può ripristinare la pagina com'era al
-     momento dell'uscita, cioè coperta: la ripuliamo */
-  window.addEventListener('pageshow', function (e) {
-    if (!e.persisted) return;
-    Array.prototype.forEach.call(document.querySelectorAll('.tiling'), function (n) {
-      n.parentNode.removeChild(n);
-    });
-    document.body.classList.remove('is-tiling');
-    root.classList.remove('rd-cover');
-    store('rd-nav', null);
-  });
 
   /* =========================================================
      Nav a schermo intero
@@ -393,140 +156,6 @@
     });
   })();
 
-  /* =========================================================
-     Tessere sopra le immagini: si sollevano in diagonale quando
-     l'immagine entra in vista, poi vengono tolte dal documento.
-     ========================================================= */
-  if (animate) {
-    Array.prototype.forEach.call(document.querySelectorAll('.wipe'), function (box) {
-      var spec = (box.getAttribute('data-mosaic') || '4x3').split('x');
-      var mc = parseInt(spec[0], 10) || 4, mr = parseInt(spec[1], 10) || 3;
-      var m = document.createElement('span');
-      m.className = 'mosaic';
-      m.setAttribute('aria-hidden', 'true');
-      m.style.setProperty('--mc', mc);
-      m.style.setProperty('--mr', mr);
-      for (var y = 0; y < mr; y++) {
-        for (var x = 0; x < mc; x++) {
-          var cell = document.createElement('i');
-          cell.style.setProperty('--k', x + y);
-          m.appendChild(cell);
-        }
-      }
-      box.appendChild(m);
-    });
-  }
-  function retireMosaic(el) {
-    var m = el.querySelector(':scope > .mosaic');
-    if (!m) return;
-    window.setTimeout(function () { if (m.parentNode) m.parentNode.removeChild(m); }, 2200);
-  }
-
-  /* =========================================================
-     Reveal deterministico (scroll + resize, niente observer)
-     ========================================================= */
-  var revealables = Array.prototype.slice.call(
-    document.querySelectorAll('.rise, .wipe, .rule--draw, .reveal-line, [data-reveal]')
-  );
-
-  if (animate && revealables.length) {
-    revealables.forEach(function (el) {
-      if (el.style.getPropertyValue('--d')) return;
-      var group = Array.prototype.filter.call(el.parentNode.children, function (c) {
-        return c.nodeType === 1 && c.className && /\b(rise|wipe|reveal-line)\b/.test(c.className);
-      });
-      var i = group.indexOf(el);
-      if (i > 0) el.style.setProperty('--d', Math.min(i, 6) * 70 + 'ms');
-    });
-
-    var pending = revealables.slice();
-
-    var sweep = function () {
-      if (!opened) return; /* sotto le piastrelle non si anima niente */
-      var limit = window.innerHeight * 0.92;
-      var next = [];
-      for (var i = 0; i < pending.length; i++) {
-        var el = pending[i];
-        if (el.getBoundingClientRect().top < limit) {
-          el.classList.add('is-in');
-          retireMosaic(el);
-          /* i contatori vivono dentro l'elemento rivelato, non su di esso */
-          Array.prototype.forEach.call(el.querySelectorAll('[data-count]'), countUp);
-          if (el.dataset.count !== undefined) countUp(el);
-        } else next.push(el);
-      }
-      pending = next;
-      if (!pending.length) {
-        window.removeEventListener('scroll', schedule);
-        window.removeEventListener('resize', schedule);
-      }
-    };
-
-    var schedule = throttled(sweep);
-
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    window.addEventListener('load', schedule);
-    whenOpen(sweep);
-  } else {
-    /* niente animazioni: i contatori mostrano subito il valore finale */
-    Array.prototype.forEach.call(document.querySelectorAll('[data-count]'), function (el) {
-      el.textContent = el.dataset.count;
-    });
-  }
-
-  /* Contatori */
-  function countUp(el) {
-    var target = parseInt(el.dataset.count, 10);
-    if (isNaN(target)) return;
-    if (el.dataset.done) return;
-    el.dataset.done = '1';
-    var start = null;
-    var dur = 1100;
-    var done = false;
-    var finish = function () {
-      if (done) return;
-      done = true;
-      el.textContent = target;
-    };
-    var tick = function (t) {
-      if (done) return;
-      if (start === null) start = t;
-      var p = Math.min((t - start) / dur, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(target * eased);
-      if (p < 1) window.requestAnimationFrame(tick);
-      else finish();
-    };
-    window.requestAnimationFrame(tick);
-    /* Se i frame non arrivano (scheda in secondo piano) il numero non deve
-       restare a zero: dopo la durata prevista lo scriviamo comunque. */
-    window.setTimeout(finish, dur + 400);
-  }
-
-  /* =========================================================
-     Barra: tema scuro sopra le sezioni scure
-     ========================================================= */
-  var bar = document.querySelector('.site-bar');
-  var darkZones = Array.prototype.slice.call(document.querySelectorAll('.hero, .sec--dark, .site-footer'));
-  if (bar && darkZones.length) {
-    var syncBar = function () {
-      var probe = bar.getBoundingClientRect().bottom - 2;
-      var dark = darkZones.some(function (z) {
-        var r = z.getBoundingClientRect();
-        return r.top <= probe && r.bottom >= probe;
-      });
-      document.documentElement.classList.toggle('theme-dark', dark);
-    };
-    var barSchedule = throttled(syncBar);
-    window.addEventListener('scroll', barSchedule, { passive: true });
-    window.addEventListener('resize', barSchedule);
-    syncBar();
-  }
-
-  /* Hero: avvia lo zoom-out una volta montato */
-  var hero = document.querySelector('.hero');
-  if (hero) whenOpen(function () { window.setTimeout(function () { hero.classList.add('is-ready'); }, 0); });
 
   /* Sopra i 760px l'hero mostra il bagno e la squadra compare in dissolvenza
      al passaggio del mouse; sotto, la squadra è già l'immagine dell'hero.
@@ -547,48 +176,6 @@
     };
     if (document.readyState === 'complete') later();
     else window.addEventListener('load', later);
-  }
-
-  /* =========================================================
-     Anteprima che segue il cursore sulle righe progetto
-     ========================================================= */
-  var peek = document.querySelector('.peek');
-  var rows = document.querySelectorAll('[data-peek]');
-  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-
-  if (peek && rows.length && finePointer.matches && !reduce.matches) {
-    var peekImg = peek.querySelector('img');
-    var mx = 0, my = 0, px = 0, py = 0, raf = null, active = false;
-
-    var loop = function () {
-      px += (mx - px) * 0.16;
-      py += (my - py) * 0.16;
-      peek.style.transform = 'translate3d(' + px + 'px,' + py + 'px,0) scale(' + (active ? 1 : 0.94) + ')';
-      if (active || Math.abs(mx - px) > 0.5) raf = window.requestAnimationFrame(loop);
-      else raf = null;
-    };
-
-    document.addEventListener('mousemove', function (e) {
-      mx = e.clientX; my = e.clientY;
-      if (!raf && active) raf = window.requestAnimationFrame(loop);
-    }, { passive: true });
-
-    Array.prototype.forEach.call(rows, function (row) {
-      row.addEventListener('mouseenter', function () {
-        var src = row.getAttribute('data-peek');
-        if (!src) return;
-        peekImg.src = src;
-        peekImg.alt = '';
-        active = true;
-        peek.classList.add('is-on');
-        px = mx; py = my;
-        if (!raf) raf = window.requestAnimationFrame(loop);
-      });
-      row.addEventListener('mouseleave', function () {
-        active = false;
-        peek.classList.remove('is-on');
-      });
-    });
   }
 
   /* =========================================================
@@ -997,4 +584,287 @@
   Array.prototype.forEach.call(document.querySelectorAll('[data-year]'), function (el) {
     el.textContent = String(new Date().getFullYear());
   });
+
+  /* =========================================================
+     Barra: fondo pieno dopo i primi pixel, si ritira scendendo e
+     torna salendo, cambia tinta sopra le sezioni scure.
+     ========================================================= */
+  var bar = document.querySelector('.site-bar');
+  if (bar) {
+    var darkZones = Array.prototype.slice.call(document.querySelectorAll('.sec--dark, .site-footer'));
+    var lastY = window.pageYOffset;
+    var syncBar = throttled(function () {
+      var y = window.pageYOffset;
+      var h = bar.offsetHeight;
+      bar.classList.toggle('is-solid', y > 24);
+      if (Math.abs(y - lastY) > 6) {
+        bar.classList.toggle('is-away', y > lastY && y > 480 && !document.body.classList.contains('is-locked'));
+        lastY = y;
+      }
+      root.classList.toggle('theme-dark', darkZones.some(function (z) {
+        var r = z.getBoundingClientRect();
+        return r.top <= h / 2 && r.bottom >= h / 2;
+      }));
+    });
+    window.addEventListener('scroll', syncBar, { passive: true });
+    window.addEventListener('resize', syncBar);
+    bar.addEventListener('focusin', function () { bar.classList.remove('is-away'); });
+    syncBar();
+  }
+
+  /* =========================================================
+     MOVIMENTO — GSAP
+     Durate e curve in un posto solo, così il sito si muove tutto
+     allo stesso modo.
+     ========================================================= */
+  var G = window.gsap;
+  var ST = window.ScrollTrigger;
+  var SP = window.SplitText;
+  var EASE = 'power3.out';
+  var SETTLE = 'expo.out';
+
+  function showAll() { root.classList.remove('rd-wait', 'rd-cover'); }
+
+  if (!animate || !G || !ST) { showAll(); return; }
+  G.registerPlugin(ST);
+  if (SP) G.registerPlugin(SP);
+
+  var toArray = G.utils.toArray;
+  var scope = document.querySelector('.hero') || document.querySelector('.page-head');
+  var inScope = function (el) { return scope && scope.contains(el); };
+
+  /* ---------- Entrata della prima schermata ---------- */
+  function enter() {
+    root.classList.remove('rd-wait');
+    if (!scope) return;
+    var tl = G.timeline({ defaults: { ease: SETTLE } });
+    tl.from(scope.querySelectorAll('.reveal-line > span'), { yPercent: 112, duration: 1.15, stagger: 0.1 }, 0)
+      .from(scope.querySelectorAll('.label, .crumb'), { autoAlpha: 0, y: 14, duration: 0.7, ease: EASE }, 0.05)
+      .from(scope.querySelectorAll('.lede, .hero-cta, .btn-row'), { autoAlpha: 0, y: 24, duration: 0.95, stagger: 0.09, ease: EASE }, 0.35);
+
+    var lastre = scope.querySelectorAll('.lastra');
+    if (lastre.length) {
+      /* le lastre vengono posate una alla volta: arrivano dall'alto, appena
+         ruotate, e si assestano; per ultime entrano le crocette */
+      var tilt = [-2.5, 2, -1.5, 2.5, -2];
+      tl.from(lastre, {
+        autoAlpha: 0, y: -46, scale: 1.06, duration: 1.2, stagger: 0.1,
+        rotation: function (i) { return tilt[i % tilt.length]; }
+      }, 0.12)
+        .from(scope.querySelectorAll('.croce'), { scale: 0, rotation: -90, duration: 0.6, ease: 'back.out(2.4)', stagger: 0.08 }, '-=0.5');
+    }
+  }
+
+  /* ---------- Apertura: solo alla prima pagina della sessione ---------- */
+  function playIntro() {
+    var narrow = window.innerWidth < 700;
+    var cols = narrow ? 3 : 6;
+    var rows = narrow ? 5 : 4;
+    var mid = Math.floor((rows - 1) / 2) * cols + Math.floor((cols - 1) / 2);
+    var el = document.createElement('div');
+    el.className = 'intro';
+    el.setAttribute('aria-hidden', 'true');
+    el.style.setProperty('--cols', cols);
+    el.style.setProperty('--rows', rows);
+    for (var i = 0; i < cols * rows; i++) {
+      var t = document.createElement('i');
+      if (i === mid) {
+        t.className = 'intro-mark';
+        var logo = new Image();
+        logo.src = 'assets/img/brand/logo-rd.png';
+        logo.alt = '';
+        t.appendChild(logo);
+      }
+      el.appendChild(t);
+    }
+    document.body.appendChild(el);
+    document.body.classList.add('is-intro');
+    root.classList.remove('rd-cover');
+    try { window.sessionStorage.setItem('rd-intro', '1'); } catch (e) { /* navigazione privata */ }
+
+    var mark = el.querySelector('.intro-mark');
+    var tl = G.timeline({
+      onComplete: function () { el.remove(); document.body.classList.remove('is-intro'); ST.refresh(); }
+    });
+    tl.from(el.children, { scale: 0.9, autoAlpha: 0, duration: 0.5, ease: EASE, stagger: { grid: [rows, cols], from: mid, amount: 0.35 } })
+      .from(mark.firstChild, { scale: 0.6, autoAlpha: 0, duration: 0.6, ease: 'back.out(1.8)' }, 0.25)
+      .set(el, { backgroundColor: 'transparent' }, '+=0.35')
+      .add(enter, '<0.2')
+      .to(el.children, {
+        yPercent: -104, rotation: function (i) { return (i % 2 ? 1 : -1) * 3; }, autoAlpha: 0,
+        duration: 0.9, ease: 'power3.inOut',
+        stagger: { grid: [rows, cols], from: mid, amount: 0.5 }
+      }, '<');
+    /* un tocco e si entra subito */
+    el.addEventListener('click', function () { tl.timeScale(4); });
+  }
+
+  if (root.classList.contains('rd-cover')) playIntro();
+  else enter();
+
+  /* ---------- Titoli a righe fuori dalla prima schermata ---------- */
+  var headings = [];
+  toArray('.reveal-line').forEach(function (line) {
+    var h = line.parentNode;
+    if (!inScope(h) && headings.indexOf(h) === -1) headings.push(h);
+  });
+  headings.forEach(function (h) {
+    G.from(h.querySelectorAll('.reveal-line > span'), {
+      yPercent: 112, duration: 1.1, ease: SETTLE, stagger: 0.1,
+      scrollTrigger: { trigger: h, start: 'top 90%', end: 'bottom top', once: true }
+    });
+  });
+
+  /* ---------- Blocchi che salgono ---------- */
+  var rises = toArray('.rise').filter(function (el) { return !inScope(el) && !el.querySelector('.reveal-line'); });
+  if (rises.length) {
+    G.set(rises, { autoAlpha: 0, y: 28 });
+    ST.batch(rises, {
+      start: 'top 92%', once: true,
+      onEnter: function (batch) { G.to(batch, { autoAlpha: 1, y: 0, duration: 0.95, ease: EASE, stagger: 0.08, overwrite: true }); }
+    });
+  }
+
+  /* ---------- Immagini: la lastra si scopre dal basso ---------- */
+  toArray('.wipe, .svc-media').forEach(function (box) {
+    var im = box.querySelector('img');
+    var tl = G.timeline({ scrollTrigger: { trigger: box, start: 'top 90%', end: 'bottom top', once: true } });
+    tl.fromTo(box, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.25, ease: SETTLE, clearProps: 'clipPath' });
+    if (im) tl.fromTo(im, { scale: 1.22 }, { scale: 1, duration: 1.7, ease: SETTLE }, 0);
+  });
+
+  /* ---------- Galleria ---------- */
+  var shots = toArray('.shot');
+  if (shots.length) {
+    G.set(shots, { autoAlpha: 0, y: 44 });
+    ST.batch(shots, {
+      start: 'top 94%', once: true,
+      onEnter: function (batch) { G.to(batch, { autoAlpha: 1, y: 0, duration: 0.9, ease: EASE, stagger: 0.07, overwrite: true }); }
+    });
+    var fb = document.querySelector('[data-filters]');
+    if (fb) fb.addEventListener('click', function (e) {
+      if (!e.target.closest('.filter')) return;
+      window.setTimeout(function () {
+        G.fromTo(shots.filter(function (s) { return !s.hidden; }),
+          { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.55, ease: EASE, stagger: 0.03, overwrite: true });
+        ST.refresh();
+      }, 0);
+    });
+  }
+
+  /* ---------- Hero: le foto scorrono dentro le lastre ---------- */
+  var heroPosa = document.querySelector('.hero-posa');
+  var mm = G.matchMedia();
+  if (heroPosa) {
+    mm.add('(min-width: 760px)', function () {
+      G.fromTo(heroPosa.querySelectorAll('.lastra img'), { yPercent: -5, scale: 1.12 }, {
+        yPercent: 5, scale: 1.12, ease: 'none',
+        scrollTrigger: { trigger: heroPosa, start: 'top bottom', end: 'bottom top', scrub: 0.6 }
+      });
+    });
+  }
+
+  /* ---------- Nastro: va da solo, e segue la mano che scorre ---------- */
+  var track = document.querySelector('.nastro-track');
+  if (track) {
+    var loop = G.to(track, { xPercent: -50, ease: 'none', duration: 46, repeat: -1 });
+    ST.create({
+      trigger: document.body, start: 'top top', end: 'bottom bottom',
+      onUpdate: function (self) {
+        var boost = 1 + Math.min(Math.abs(self.getVelocity()) / 500, 6);
+        G.to(loop, { timeScale: boost * self.direction, duration: 0.25, overwrite: true });
+        G.to(loop, { timeScale: self.direction, duration: 1.4, delay: 0.25, ease: 'power2.out' });
+      }
+    });
+  }
+
+  /* ---------- Manifesto: le parole si accendono scorrendo ---------- */
+  var fills = toArray('[data-fill]');
+  if (fills.length && SP) {
+    var splitFills = function () {
+      fills.forEach(function (p) {
+        var split = new SP(p, { type: 'words' });
+        G.fromTo(split.words, { opacity: 0.16 }, {
+          opacity: 1, ease: 'none', stagger: 0.5,
+          scrollTrigger: { trigger: p, start: 'top 84%', end: 'bottom 58%', scrub: 0.5 }
+        });
+      });
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(splitFills); else splitFills();
+  }
+
+  /* ---------- Numeri ---------- */
+  toArray('[data-count]').forEach(function (el) {
+    var end = parseInt(el.getAttribute('data-count'), 10);
+    if (isNaN(end)) return;
+    var state = { v: 0 };
+    el.textContent = '0';
+    G.to(state, {
+      v: end, duration: 1.8, ease: 'power2.out',
+      onUpdate: function () { el.textContent = String(Math.round(state.v)); },
+      scrollTrigger: { trigger: el, start: 'top 92%', once: true }
+    });
+  });
+
+  /* ---------- Lavorazioni: ogni lastra arretra sotto la successiva ---------- */
+  mm.add('(min-width: 1000px)', function () {
+    var cards = toArray('.svc');
+    cards.forEach(function (card, i) {
+      if (i === cards.length - 1) return;
+      G.to(card, {
+        scale: 1 - (cards.length - 1 - i) * 0.028, ease: 'none',
+        scrollTrigger: { trigger: cards[i + 1], start: 'top bottom', end: 'top 22%', scrub: true }
+      });
+    });
+  });
+
+  /* ---------- Passaggi: il filo avanza con lo scorrimento ---------- */
+  toArray('.steps').forEach(function (el) {
+    G.fromTo(el, { '--p': 0 }, {
+      '--p': 1, ease: 'none',
+      scrollTrigger: { trigger: el, start: 'top 84%', end: 'top 36%', scrub: 0.5 }
+    });
+  });
+
+  /* ---------- Anteprima dei lavori: la foto segue il cursore ---------- */
+  var peek = document.querySelector('.peek');
+  var peekRows = toArray('[data-peek]');
+  if (peek && peekRows.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    var peekImg = peek.querySelector('img');
+    G.set(peek, { xPercent: -50, yPercent: -50, scale: 0.8 });
+    var px = G.quickTo(peek, 'x', { duration: 0.6, ease: 'power3' });
+    var py = G.quickTo(peek, 'y', { duration: 0.6, ease: 'power3' });
+    var pr = G.quickTo(peek, 'rotation', { duration: 0.8, ease: 'power3' });
+    var lastX = 0;
+    peekRows.forEach(function (a) {
+      a.addEventListener('mouseenter', function (e) {
+        peekImg.src = a.getAttribute('data-peek');
+        lastX = e.clientX;
+        G.set(peek, { x: e.clientX + 210, y: e.clientY });
+        G.to(peek, { autoAlpha: 1, scale: 1, duration: 0.5, ease: EASE, overwrite: 'auto' });
+      });
+      a.addEventListener('mousemove', function (e) {
+        px(Math.min(e.clientX + 210, window.innerWidth - 180));
+        py(e.clientY);
+        pr(Math.max(-7, Math.min(7, (e.clientX - lastX) * 0.5)));
+        lastX = e.clientX;
+      });
+      a.addEventListener('mouseleave', function () {
+        G.to(peek, { autoAlpha: 0, scale: 0.8, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
+        pr(0);
+      });
+    });
+  }
+
+  /* ---------- Piè di pagina: il nome sale lettera per lettera ---------- */
+  var word = document.querySelector('.foot-word');
+  if (word && SP) {
+    var chars = new SP(word, { type: 'chars' }).chars;
+    G.from(chars, {
+      yPercent: 100, duration: 1.3, ease: SETTLE, stagger: 0.05,
+      scrollTrigger: { trigger: word, start: 'top 98%', once: true }
+    });
+  }
+
+  window.addEventListener('load', function () { ST.refresh(); });
 })();

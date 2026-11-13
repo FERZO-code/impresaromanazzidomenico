@@ -224,3 +224,6 @@ h2 { font-size: 1.6rem; }
 .mv:disabled { opacity: .3; cursor: default; }
 .del:hover { border-color: #B3261E; color: #B3261E; }
 @media (max-width: 760px) { .voci td.azioni { grid-column: 1 / -1; } .voci .azioni .mv, .voci .azioni .del { flex: 1; height: 44px; } }
+
+/* sconto: valore + tipo (% o €) sulla stessa riga */
+.sconto { display: grid; grid-template-columns: 1fr 76px; gap: 8px; }

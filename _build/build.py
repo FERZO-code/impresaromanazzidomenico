@@ -19,6 +19,7 @@ VIDEO_DIR = "assets/video/"
 MAILTO = "mailto:impresaromanazzid@virgilio.it?subject=Richiesta%20di%20sopralluogo&amp;body=Buongiorno%2C%0A%0Avorrei%20un%20sopralluogo%20per%3A%0A%0AAmbiente%20%28bagno%2C%20cucina%2C%20terrazzo%2C%20casa%20intera...%29%3A%20%0AMetri%20quadri%2C%20anche%20a%20occhio%3A%20%0AMateriale%20gi%C3%A0%20scelto%20%28formato%20e%20marca%29%2C%20se%20c%27%C3%A8%3A%20%0AComune%3A%20%0AQuando%20vorrei%20iniziare%3A%20%0A%0AIl%20mio%20numero%20di%20telefono%3A%20%0A"
 
 def esc(s): return html.escape(s, quote=True)
+def tel_fmt(t): return "%s %s %s" % (t[:3], t[3:6], t[6:])
 
 # Versione degli asset: cambia da sola quando cambia il file, così chi ha
 # già visitato il sito non resta con il vecchio CSS/JS in cache.
@@ -137,7 +138,7 @@ def shot(slug, wide=False):
     b = P + slug
     avif, jpg = srcsets(slug, ("sm", "md"))
     sz = "(min-width:1180px) 25vw, (min-width:760px) 33vw, 50vw"
-    return """<figure class="shot wipe%s" data-mosaic="3x3" data-cat="%s">
+    return """<figure class="shot%s" data-cat="%s">
         <button type="button" data-lb-open data-full="%s-lg.jpg" data-full-avif="%s-lg.avif" data-w="%d" data-h="%d"
           data-alt="%s" data-caption="%s">
           <picture><source type="image/avif" srcset="%s" sizes="%s">
@@ -176,11 +177,10 @@ def bar_nav(current):
 
 def bar(current=""):
     return """<a class="skip-link" href="#main">Salta al contenuto</a>
-<div class="grid-lines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
 <header class="site-bar">
   <div class="wrap bar-inner">
     <a class="wordmark" href="index.html">
-      <img src="assets/img/brand/logo-rd.png" width="34" height="34" alt="">
+      <img src="assets/img/brand/logo-rd.png" width="36" height="36" alt="">
       <span class="brand-text"><b>Romanazzi Domenico</b><span>Piastrellisti e posatori</span></span>
       <span class="visually-hidden">— torna alla home</span>
     </a>
@@ -193,7 +193,7 @@ def bar(current=""):
       </button>
     </div>
   </div>
-</header>""" % (bar_nav(current), TEL_D, icon("phone"), TEL_D)
+</header>""" % (bar_nav(current), TEL_D, icon("phone"), tel_fmt(TEL_D))
 
 def nav_overlay(current):
     """Menu a schermo intero. "Lavorazioni" non è una pagina: è un pulsante
@@ -238,16 +238,16 @@ def footer():
   <div class="wrap">
     <div class="foot-cta">
       <p class="label rise">Il prossimo cantiere</p>
-      <h2 class="rise">%s</h2>
-      <p class="lede rise" style="margin-top:32px">Chiamaci e dicci cosa devi fare. Se il lavoro è nelle nostre corde te lo diciamo subito, e fissiamo il sopralluogo.</p>
-      <p class="rise" style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px">
+      <h2>%s</h2>
+      <p class="lede rise">Chiamaci e dicci cosa devi fare. Se il lavoro è nelle nostre corde te lo diciamo subito, e fissiamo il sopralluogo.</p>
+      <p class="btn-row rise">
         <a class="btn btn--flare" href="tel:+39%s">%s Chiama %s</a>
-        <a class="btn btn--line" href="%s">%s Scrivi</a>
+        <a class="btn btn--line" href="%s">%s Scrivi una mail</a>
       </p>
     </div>
     <div class="foot-grid">
       <div class="foot-mark">
-        <img src="assets/img/brand/logo-rd.png" width="44" height="44" alt="Marchio Romanazzi Domenico">
+        <img src="assets/img/brand/logo-rd.png" width="46" height="46" alt="Marchio Romanazzi Domenico">
         <p>Impresa di piastrellisti e posatori a Rutigliano, provincia di Bari. Massetti, impermeabilizzazioni, pavimenti, rivestimenti e gres laminato a grande formato.</p>
       </div>
       <div>
@@ -273,6 +273,7 @@ def footer():
       <span>Lun–Ven 7:00–15:00 · Sab 7:00–13:00</span>
     </div>
   </div>
+  <p class="foot-word" aria-hidden="true">Romanazzi</p>
 </footer>
 <div class="callbar" data-callbar hidden>
   <a class="btn btn--flare" href="tel:+39%s">%s Chiama</a>
@@ -293,12 +294,17 @@ def footer():
     </div>
   </div>
 </dialog>
+<script src="%s" defer></script>
+<script src="%s" defer></script>
+<script src="%s" defer></script>
 <script src="%s" defer></script>""" % (
     lines("Parliamo del", '<span class="flare">tuo cantiere.</span>'),
-    TEL_D, icon("phone"), TEL_D, MAILTO, icon("mail"), links, svc_links,
-    TEL_D, TEL_D, TEL_G, TEL_G, EMAIL, EMAIL,
+    TEL_D, icon("phone"), tel_fmt(TEL_D), MAILTO, icon("mail"), links, svc_links,
+    TEL_D, tel_fmt(TEL_D), TEL_G, tel_fmt(TEL_G), EMAIL, EMAIL,
     TEL_D, icon("phone"), MAILTO, icon("mail"),
-    icon("close"), icon("left"), icon("right"), asset("assets/js/main.js"))
+    icon("close"), icon("left"), icon("right"),
+    asset("assets/js/vendor/gsap.min.js"), asset("assets/js/vendor/ScrollTrigger.min.js"),
+    asset("assets/js/vendor/SplitText.min.js"), asset("assets/js/main.js"))
 
 LD = """<script type="application/ld+json">
 {"@context":"https://schema.org","@type":"HomeAndConstructionBusiness",
@@ -327,24 +333,25 @@ LD = """<script type="application/ld+json">
  "url":"%(u)s","inLanguage":"it-IT","publisher":{"@id":"%(u)s#impresa"}}
 </script>""" % {"u": SITE_URL, "t1": TEL_D, "t2": TEL_G, "e": EMAIL, "ig": IG_PROFILE}
 
-# Deciso prima del primo disegno, così la pagina non lampeggia sotto l'apertura.
-# Niente animazioni con "riduci movimento"; sessionStorage può non esistere
-# (navigazione privata): in quel caso niente apertura, e il sito resta normale.
-# Il timeout è una rete di sicurezza: se main.js non arriva, il velo sparisce.
+# Deciso prima del primo disegno, così la pagina non lampeggia.
+# "rd-wait" tiene nascosti i testi d'apertura finché main.js non li anima;
+# "rd-cover" copre la pagina alla prima visita della sessione, per l'apertura.
+# Niente animazioni con "riduci movimento". Il timeout è la rete di sicurezza:
+# se gli script non arrivano, dopo 4 secondi tutto torna visibile.
 HEAD_SCRIPT = """<script>
 (function(d){var h=d.documentElement,m=window.matchMedia;
 if(m&&m('(prefers-reduced-motion: reduce)').matches)return;
-h.className+=' js-anim';
-try{var s=window.sessionStorage,f=/[?&]intro(=|&|$)/.test(location.search),
-k=f?'intro':(s.getItem('rd-nav')?'arrive':(s.getItem('rd-intro')?'':'intro'));
-if(k){h.setAttribute('data-tiling',k);h.className+=' rd-cover';
-if(k=='intro'){(new Image()).src='assets/img/photos/calacatta-parete-01-md.jpg';}
-setTimeout(function(){h.classList.remove('rd-cover');},4500);}}catch(e){}
+h.className+=' js-anim rd-wait';
+setTimeout(function(){h.classList.remove('rd-wait','rd-cover');},4000);
+try{var s=window.sessionStorage;
+if(/[?&]intro(=|&|$)/.test(location.search)||!s.getItem('rd-intro'))h.className+=' rd-cover';}catch(e){}
 })(document);
 </script>"""
 
-FONTS = ("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;700"
-         "&family=Barlow:wght@400;600;700&display=swap")
+# Archivo a larghezza variabile (titoli stretti, etichette larghe) e
+# Libre Caslon corsivo per le parole in evidenza.
+FONTS = ("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..700"
+         "&family=Libre+Caslon+Text:ital@1&display=swap")
 
 def page(title, desc, current, body, og="bagno-lavabi-01", ld="", head_extra=""):
     url = SITE_URL + ("" if current == "index.html" else current)
@@ -355,7 +362,7 @@ def page(title, desc, current, body, og="bagno-lavabi-01", ld="", head_extra="")
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>%s</title>
 <meta name="description" content="%s">
-<meta name="theme-color" content="#0B0B0B">
+<meta name="theme-color" content="#E8E9E4">
 <link rel="canonical" href="%s">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Impresa Romanazzi Domenico">
@@ -394,8 +401,9 @@ def page(title, desc, current, body, og="bagno-lavabi-01", ld="", head_extra="")
 
 # l'immagine più grande della home, richiesta subito: è quella che decide il
 # tempo di caricamento percepito (LCP)
+HERO_SIZES = "(min-width: 1000px) 32vw, (min-width: 760px) 62vw, 100vw"
 HERO_PRELOAD = """<link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(min-width: 760px)"
-  imagesrcset="assets/img/photos/bagno-lavabi-01-md.avif 1100w, assets/img/photos/bagno-lavabi-01-lg.avif 1800w" imagesizes="100vw">
+  imagesrcset="assets/img/photos/bagno-lavabi-01-sm.avif 640w, assets/img/photos/bagno-lavabi-01-md.avif 1100w, assets/img/photos/bagno-lavabi-01-lg.avif 1800w" imagesizes="(min-width: 1000px) 32vw, 62vw">
 <link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(max-width: 759.98px)"
   imagesrcset="assets/img/photos/team-01-sm.avif 480w, assets/img/photos/team-01-md.avif 826w" imagesizes="100vw">"""
 
@@ -550,9 +558,9 @@ PROVIDER = {"@type": "HomeAndConstructionBusiness", "@id": SITE_URL + "#impresa"
 COUNTS = [("25","+","Anni di mestiere"),("10","+","Lavorazioni a catalogo"),
           ("1000","+","Clienti serviti"),("100","%","Clienti soddisfatti")]
 counts = "".join(Template(
-  '<div class="rise"><dt><span>$l</span><span class="ix">0$i</span></dt>'
+  '<div class="rise"><dt>$l</dt>'
   '<dd><span data-count="$n">$n</span><span class="u">$u</span></dd></div>'
-).substitute(i=i, n=n, u=u, l=esc(l)) for i, (n, u, l) in enumerate(COUNTS, 1))
+).substitute(n=n, u=u, l=esc(l)) for n, u, l in COUNTS)
 
 STEPS = [
  ("Chiamata","Un numero, non un modulo di contatto. Ci racconti cosa devi fare e in due minuti capiamo se siamo l'impresa giusta per quel lavoro."),
@@ -583,17 +591,16 @@ svc = ""
 for i, (t, d, tags, ph) in enumerate(SERVICES, 1):
     tg = "".join("<li>%s</li>" % esc(x) for x in tags)
     link = SERVICE_PAGES[i - 1]["file"]
-    svc += Template("""<article class="svc wipe">
-      $im
+    svc += Template("""<article class="svc" style="--i:$j">
+      <div class="svc-media">$im</div>
       <div class="svc-body">
-        <span class="num">0$i</span>
         <h3>$t</h3>
         <p>$d</p>
         <ul class="service-tags">$tg</ul>
         <a class="svc-more" href="$link">Come lo facciamo $iarrow<span class="visually-hidden">: $t</span></a>
       </div>
-    </article>""").substitute(i=i, t=esc(t), d=esc(d), tg=tg, link=link, iarrow=icon("arrow"),
-        im=img(ph, "md", sizes="(min-width:860px) 50vw, 100vw"))
+    </article>""").substitute(j=i - 1, t=esc(t), d=esc(d), tg=tg, link=link, iarrow=icon("arrow"),
+        im=img(ph, "md", sizes="(min-width:1000px) 40vw, 100vw"))
 
 # Schemi di posa: senza JavaScript l'elenco resta tutto leggibile;
 # con JavaScript diventa un selettore e la tela ridisegna le piastrelle.
@@ -639,68 +646,88 @@ for i, (t, m, ph) in enumerate(PROJECTS, 1):
       </a>
     </li>""").substitute(i=i, t=esc(t), m=esc(m), peek=P + ph + "-sm.jpg")
 
+NASTRO = ["Massetti", "Impermeabilizzazioni", "Pavimenti", "Rivestimenti", "Piatti doccia", "Grandi formati"]
+nastro_items = "".join('<li><span>%s</span><i class="croce"></i></li>' % esc(x) for x in NASTRO)
+
 home = Template("""
 <section class="hero">
-  <div class="hero-media" aria-hidden="true">
-    <picture>
-      <source media="(min-width: 760px)" type="image/avif"
-        srcset="assets/img/photos/bagno-lavabi-01-md.avif 1100w, assets/img/photos/bagno-lavabi-01-lg.avif 1800w"
-        sizes="100vw" width="1800" height="1200">
-      <source media="(min-width: 760px)"
-        srcset="assets/img/photos/bagno-lavabi-01-md.jpg 1100w, assets/img/photos/bagno-lavabi-01-lg.jpg 1800w"
-        sizes="100vw" width="1800" height="1200">
-      <source type="image/avif"
-        srcset="assets/img/photos/team-01-sm.avif 480w, assets/img/photos/team-01-md.avif 826w"
-        sizes="100vw" width="1350" height="1800">
-      <img class="hero-base" src="assets/img/photos/team-01-md.jpg"
-        srcset="assets/img/photos/team-01-sm.jpg 480w, assets/img/photos/team-01-md.jpg 826w"
-        sizes="100vw" width="1350" height="1800" alt="" loading="eager" decoding="async" fetchpriority="high">
-    </picture>
-    <img class="hero-alt" data-hover-src="assets/img/photos/team-01-md.jpg"
-      data-hover-srcset="assets/img/photos/team-01-md.avif 826w, assets/img/photos/team-01-lg.avif 1350w"
-      sizes="100vw" width="1350" height="1800" alt=""
-      loading="lazy" decoding="async" fetchpriority="low">
-  </div>
   <div class="wrap hero-inner">
-    <p class="label">Impresa Romanazzi Domenico — Rutigliano (BA)</p>
-    <h1>$h1</h1>
-    <div class="hero-foot">
-      <p class="rise" style="--d:420ms">Piastrellisti e posatori da oltre venticinque anni. Massetti, impermeabilizzazioni, pavimenti, rivestimenti e lastre in gres da tre metri: tutto quello che sta fra il grezzo e la finitura.</p>
-      <p class="hero-cta rise" style="--d:520ms">
-        <a class="btn btn--flare" href="tel:+39$tel">$iphone Chiama ora</a>
-        <a class="btn btn--line" href="lavori.html">$iarrow I lavori</a>
+    <div class="hero-copy">
+      <p class="label">Piastrellisti e posatori · Rutigliano (BA)</p>
+      <h1>$h1</h1>
+      <p class="lede">Posiamo da oltre venticinque anni. Massetti, impermeabilizzazioni, pavimenti, rivestimenti e lastre in gres da tre metri: tutto quello che sta fra il grezzo e la finitura.</p>
+      <p class="hero-cta">
+        <a class="btn btn--flare" href="tel:+39$tel">$iphone Chiama $telf</a>
+        <a class="btn btn--line" href="lavori.html">$iarrow Guarda i lavori</a>
       </p>
     </div>
+    <div class="hero-posa">
+      <figure class="lastra lastra--a">
+        <picture>
+          <source media="(min-width: 760px)" type="image/avif"
+            srcset="assets/img/photos/bagno-lavabi-01-sm.avif 640w, assets/img/photos/bagno-lavabi-01-md.avif 1100w, assets/img/photos/bagno-lavabi-01-lg.avif 1800w"
+            sizes="$herosizes" width="1800" height="1200">
+          <source media="(min-width: 760px)"
+            srcset="assets/img/photos/bagno-lavabi-01-sm.jpg 640w, assets/img/photos/bagno-lavabi-01-md.jpg 1100w, assets/img/photos/bagno-lavabi-01-lg.jpg 1800w"
+            sizes="$herosizes" width="1800" height="1200">
+          <source type="image/avif"
+            srcset="assets/img/photos/team-01-sm.avif 480w, assets/img/photos/team-01-md.avif 826w"
+            sizes="100vw" width="1350" height="1800">
+          <img class="hero-base" src="assets/img/photos/team-01-md.jpg"
+            srcset="assets/img/photos/team-01-sm.jpg 480w, assets/img/photos/team-01-md.jpg 826w"
+            sizes="100vw" width="1350" height="1800" loading="eager" decoding="async" fetchpriority="high"
+            alt="Un bagno rivestito in gres effetto Calacatta posato dall'impresa; su telefono, Domenico e Giuseppe Romanazzi in cantiere">
+        </picture>
+        <img class="hero-alt" data-hover-src="assets/img/photos/team-01-md.jpg"
+          data-hover-srcset="assets/img/photos/team-01-md.avif 826w, assets/img/photos/team-01-lg.avif 1350w"
+          sizes="$herosizes" width="1350" height="1800" alt=""
+          loading="lazy" decoding="async" fetchpriority="low">
+        <span class="hero-hint" aria-hidden="true">Passaci sopra: chi l'ha posato</span>
+      </figure>
+      <figure class="lastra lastra--b">$imgb</figure>
+      <figure class="lastra lastra--c">$imgc</figure>
+      <div class="lastra lastra--d">
+        <p class="label">Da oltre 25 anni</p>
+        <p>Dal grezzo alla finitura.</p>
+      </div>
+      <figure class="lastra lastra--e">$imge</figure>
+      <i class="croce" aria-hidden="true"></i><i class="croce" aria-hidden="true"></i><i class="croce" aria-hidden="true"></i>
+    </div>
   </div>
 </section>
+
+<div class="nastro" aria-hidden="true">
+  <div class="nastro-track"><ul>$nastro</ul><ul>$nastro</ul></div>
+</div>
 
 <section class="sec" aria-labelledby="manifesto-h">
-  <div class="wrap statement">
-    <div>
-      <p class="label rise">L'impresa</p>
-      <h2 id="manifesto-h" style="margin-top:24px">$h2a</h2>
-    </div>
-    <div class="statement-copy">
-      <p class="rise">Siamo un'impresa familiare di Rutigliano, in provincia di Bari. Due soci, una squadra fissa e nessun subappalto sulla parte che conta: chi viene a fare il sopralluogo è lo stesso che poi stende il collante.</p>
-      <p class="rise">Lavoriamo su appartamenti privati, ristrutturazioni complete e spazi commerciali. Il nostro mestiere sta quasi tutto in quello che non si vedrà più: se dopo dieci anni una fuga non si è aperta e un balcone non gocciola, il merito è di lì.</p>
-      <p class="rise" style="margin-top:16px"><a class="btn btn--line" href="impresa.html">$iarrow Chi siamo</a></p>
-    </div>
-  </div>
-</section>
-
-<section class="sec sec--dark sec--tight" aria-labelledby="numeri-h">
   <div class="wrap">
+    <div class="statement">
+      <div>
+        <p class="label rise">L'impresa</p>
+        <h2 id="manifesto-h" style="margin-top:20px">$h2a</h2>
+      </div>
+      <div class="statement-copy">
+        <p class="manifesto-lead" data-fill>Siamo un'impresa familiare di Rutigliano, in provincia di Bari. Due soci, una squadra fissa e nessun subappalto sulla parte che conta: chi viene a fare il sopralluogo è lo stesso che poi stende il collante.</p>
+        <p class="rise">Lavoriamo su appartamenti privati, ristrutturazioni complete e spazi commerciali. Il nostro mestiere sta quasi tutto in quello che non si vedrà più: se dopo dieci anni una fuga non si è aperta e un balcone non gocciola, il merito è di lì.</p>
+        <p class="rise" style="margin-top:12px"><a class="btn btn--line" href="impresa.html">$iarrow Chi siamo</a></p>
+      </div>
+    </div>
     <h2 id="numeri-h" class="visually-hidden">I numeri dell'impresa</h2>
-    <dl class="counts">$counts</dl>
+    <dl class="counts" aria-labelledby="numeri-h">$counts</dl>
   </div>
 </section>
 
-<section class="sec" aria-labelledby="servizi-h">
+<section class="sec" aria-labelledby="servizi-h" style="padding-top:0">
   <div class="wrap">
-    <p class="label rise">Cosa facciamo</p>
-    <h2 id="servizi-h" class="rise" style="font-size:var(--d-2);margin:24px 0 24px">$h2b</h2>
-    <p class="lede rise" style="margin-bottom:48px">Ogni lavorazione è una piastrella del cantiere. Le facciamo tutte noi, nello stesso ordine in cui si posano.</p>
-    <div class="svc-grid">$svc</div>
+    <div class="sec-head">
+      <div>
+        <p class="label rise">Cosa facciamo</p>
+        <h2 id="servizi-h">$h2b</h2>
+      </div>
+      <p class="lede rise">Ogni lavorazione è una piastrella del cantiere. Le facciamo tutte noi, nello stesso ordine in cui si posano.</p>
+    </div>
+    <div class="svc-stack">$svc</div>
   </div>
 </section>
 
@@ -708,7 +735,7 @@ home = Template("""
   <div class="wrap posa">
     <div class="posa-copy">
       <p class="label rise">Schemi di posa</p>
-      <h2 id="posa-h" class="rise" style="font-size:var(--d-2);margin:24px 0 24px">$h2posa</h2>
+      <h2 id="posa-h">$h2posa</h2>
       <p class="lede rise">Il disegno della posa cambia una stanza più del colore della piastrella. Prova gli schemi che posiamo più spesso.</p>
       <div class="posa-tabs" role="group" aria-label="Scegli uno schema di posa" hidden></div>
     </div>
@@ -728,14 +755,14 @@ home = Template("""
   <div class="wrap statement">
     <div>
       <p class="label rise">Il video</p>
-      <h2 id="video-h" style="margin-top:24px">$h2e</h2>
-      <p class="lede rise" style="margin-top:32px">Sedici secondi di cantieri veri: bagni in gres a tutta altezza, tagli, posa, finiture. Nessuna immagine di repertorio, sono tutti lavori nostri.</p>
-      <p class="rise" style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px">
+      <h2 id="video-h" style="margin-top:20px">$h2e</h2>
+      <p class="lede rise" style="margin-top:28px">Sedici secondi di cantieri veri: bagni in gres a tutta altezza, tagli, posa, finiture. Nessuna immagine di repertorio, sono tutti lavori nostri.</p>
+      <p class="btn-row rise" style="margin-top:28px">
         <a class="btn btn--line" href="$igprofile" target="_blank" rel="noopener">$iarrow Seguici su Instagram</a>
       </p>
     </div>
     <figure class="video-card rise">
-      <div class="video-frame wipe">
+      <div class="video-frame">
         <video class="rd-video" playsinline muted loop controls preload="none"
           poster="${videodir}rd-cantiere-poster.jpg" width="1280" height="720"
           aria-label="Video di presentazione dell'impresa: bagni rivestiti in gres effetto Calacatta, taglio e posa delle lastre in cantiere, e i recapiti dell'impresa.">
@@ -749,28 +776,38 @@ home = Template("""
   </div>
 </section>
 
-<section class="sec sec--dark" aria-labelledby="lavori-h">
+<section class="sec" aria-labelledby="lavori-h">
   <div class="wrap">
-    <p class="label rise">Selezione</p>
-    <h2 id="lavori-h" class="rise" style="font-size:var(--d-2);margin:24px 0 56px">$h2c</h2>
+    <div class="sec-head">
+      <div>
+        <p class="label rise">Selezione</p>
+        <h2 id="lavori-h">$h2c</h2>
+      </div>
+      <p class="btn-row rise" style="justify-self:start"><a class="btn btn--flare" href="lavori.html">$iarrow Tutta la galleria</a></p>
+    </div>
     <ul class="projects">$proj</ul>
-    <p class="rise" style="margin-top:48px"><a class="btn btn--flare" href="lavori.html">$iarrow Tutta la galleria</a></p>
   </div>
 </section>
 
-<section class="sec" aria-labelledby="metodo-h">
+<section class="sec sec--paper2" aria-labelledby="metodo-h">
   <div class="wrap">
-    <p class="label rise">Come si lavora</p>
-    <h2 id="metodo-h" class="rise" style="font-size:var(--d-2);margin:24px 0 24px">$h2d</h2>
-    <p class="lede rise" style="margin-bottom:48px">Quattro passaggi, posati in fila come le piastrelle di un corso. Nessuno si salta.</p>
+    <div class="sec-head">
+      <div>
+        <p class="label rise">Come si lavora</p>
+        <h2 id="metodo-h">$h2d</h2>
+      </div>
+      <p class="lede rise">Quattro passaggi, posati in fila come le piastrelle di un corso. Nessuno si salta.</p>
+    </div>
     <ol class="steps">$steps</ol>
   </div>
 </section>
 
-<section class="sec sec--paper2 sec--tight" aria-labelledby="partner-h">
-  <div class="wrap">
-    <p class="label rise" id="partner-h">Materiali e attrezzature</p>
-    <p class="lede rise" style="margin:24px 0 40px">Lavoriamo con marchi che conosciamo a fondo, perché su un cantiere il materiale sbagliato costa più del tempo perso.</p>
+<section class="sec sec--tight" aria-labelledby="partner-h">
+  <div class="wrap partners-row">
+    <div>
+      <p class="label rise" id="partner-h">Materiali e attrezzature</p>
+      <p class="lede rise" style="margin-top:16px">Lavoriamo con marchi che conosciamo a fondo, perché su un cantiere il materiale sbagliato costa più del tempo perso.</p>
+    </div>
     <ul class="partners rise">
       <li><img src="assets/img/brand/partner-fassa.png" width="400" height="229" alt="Fassa Bortolo" loading="lazy"></li>
       <li><img src="assets/img/brand/partner-montolit.png" width="209" height="196" alt="Montolit" loading="lazy"></li>
@@ -779,12 +816,16 @@ home = Template("""
   </div>
 </section>
 """).substitute(
-  h1=lines("Posa", '<span class="thin">senza</span>', '<span class="flare">compromessi.</span>'),
-  tel=TEL_D, iphone=icon("phone"), iarrow=icon("arrow"),
-  h2a=lines("Non vendiamo", "un servizio.", '<span class="flare">Vendiamo precisione.</span>'),
-  h2b=lines("Quattro", "lavorazioni."),
+  h1=lines("Posa senza", '<span class="flare">compromessi.</span>'),
+  tel=TEL_D, telf=tel_fmt(TEL_D), iphone=icon("phone"), iarrow=icon("arrow"), herosizes=HERO_SIZES,
+  imgb=img("scala-led-01", "sm", sizes="(min-width:1000px) 16vw, 30vw"),
+  imgc=img("posa-colla-01", "sm", sizes="(min-width:1000px) 16vw, 30vw"),
+  imge=img("calacatta-angolo-01", "sm", sizes="(min-width:1000px) 16vw, 30vw"),
+  nastro=nastro_items,
+  h2a=lines("Non vendiamo un servizio.", '<span class="flare">Vendiamo precisione.</span>'),
+  h2b=lines("Quattro lavorazioni,", "una squadra sola."),
   h2posa=lines("Stessa piastrella,", '<span class="flare">un\'altra stanza.</span>'),
-  h2c=lines("Lavori", "recenti."),
+  h2c=lines("Lavori recenti."),
   h2d=lines("Dal telefono", "alla consegna."),
   h2e=lines("Guardaci", '<span class="flare">lavorare.</span>'),
   igprofile=IG_PROFILE, videodir=VIDEO_DIR,
@@ -825,7 +866,7 @@ lavori = Template("""
   <div class="wrap">
     <nav class="crumb" aria-label="Percorso"><ol><li><a href="index.html">Home</a></li><li aria-current="page">Lavori</li></ol></nav>
     <h1>$h1</h1>
-    <p class="lede rise">Trentatré fotografie di cantieri chiusi. Bagni, scale, pareti in grande formato e interni completi. Tocca una foto per aprirla.</p>
+    <p class="lede rise">Trentacinque fotografie di cantieri chiusi. Bagni, scale, pareti in grande formato e interni completi. Tocca una foto per aprirla.</p>
   </div>
 </section>
 
@@ -907,17 +948,17 @@ impresa = Template("""
     <div class="wipe">$imgteam</div>
     <div class="statement-copy">
       <p class="label rise">Da dove veniamo</p>
-      <p class="rise" style="font-family:var(--f-display);font-weight:700;font-size:var(--d-3);text-transform:uppercase;line-height:.92;margin-block:16px 8px">Un'impresa nata in cantiere, non in ufficio.</p>
+      <h2 class="rise" style="font-size:var(--d-3);margin-block:14px 6px">Un'impresa nata in cantiere, non in ufficio.</h2>
       <p class="rise">Impresa Romanazzi Domenico è nata a Rutigliano, in provincia di Bari, come squadra di piastrellisti. Da allora è cresciuta senza cambiare metodo: poche persone, molta pratica e la scelta di non dare a nessun altro la parte delicata del lavoro.</p>
       <p class="rise">Oggi seguiamo appartamenti privati, ristrutturazioni complete e spazi commerciali. Dal massetto all'ultima fuga, ogni cantiere passa dalle stesse mani.</p>
     </div>
   </div>
 </section>
 
-<section class="sec sec--dark sec--tight" aria-labelledby="numeri-h">
+<section class="sec sec--tight" aria-labelledby="numeri-h" style="padding-top:0">
   <div class="wrap">
     <h2 id="numeri-h" class="visually-hidden">I numeri dell'impresa</h2>
-    <dl class="counts">$counts</dl>
+    <dl class="counts" style="margin-top:0">$counts</dl>
   </div>
 </section>
 
@@ -975,14 +1016,14 @@ contatti = Template("""
       <div class="contact-row rise">
         <dt>Telefono</dt>
         <dd>
-          <a class="big" href="tel:+39$tel1">$tel1</a>
+          <a class="big" href="tel:+39$tel1">$tel1f</a>
           <p class="note">Domenico. È il modo più rapido: in una telefonata capiamo se il lavoro è nelle nostre corde.</p>
         </dd>
       </div>
       <div class="contact-row rise">
         <dt>Secondo numero</dt>
         <dd>
-          <a class="big" href="tel:+39$tel2">$tel2</a>
+          <a class="big" href="tel:+39$tel2">$tel2f</a>
           <p class="note">Giuseppe. Da provare quando il primo squilla a vuoto: vuol dire che siamo sotto una lastra.</p>
         </dd>
       </div>
@@ -1029,7 +1070,7 @@ contatti = Template("""
   </div>
 </section>
 """).substitute(h1=lines("Parliamo", '<span class="flare">di lavoro.</span>'),
-                tel1=TEL_D, tel2=TEL_G, email=EMAIL, mailto=MAILTO,
+                tel1=TEL_D, tel2=TEL_G, tel1f=tel_fmt(TEL_D), tel2f=tel_fmt(TEL_G), email=EMAIL, mailto=MAILTO,
                 h2=lines("Quattro cose", "da avere sotto mano."))
 
 write("contatti.html", page(
@@ -1086,7 +1127,7 @@ for sp in SERVICE_PAGES:
     <nav class="crumb" aria-label="Percorso"><ol><li><a href="index.html">Home</a></li><li aria-current="page">$short</li></ol></nav>
     <h1>$h1</h1>
     <p class="lede rise">$lede</p>
-    <p class="rise" style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px">
+    <p class="btn-row rise" style="margin-top:32px">
       <a class="btn btn--flare" href="tel:+39$tel">$iphone Chiama per un sopralluogo</a>
       <a class="btn btn--line" href="lavori.html">$iarrow Guarda i lavori</a>
     </p>
@@ -1166,7 +1207,7 @@ nf = Template("""
     <p class="label">Errore 404</p>
     <h1>$h1</h1>
     <p class="lede">La pagina che cercavi non c'è più o non c'è mai stata. Il sito è stato rinnovato: da qui trovi tutto.</p>
-    <p style="margin-top:32px;display:flex;flex-wrap:wrap;gap:12px">
+    <p class="btn-row" style="margin-top:32px">
       <a class="btn btn--flare" href="index.html">$iarrow Torna alla home</a>
       <a class="btn btn--line" href="lavori.html">$iarrow I lavori</a>
       <a class="btn btn--line" href="tel:+39$tel">$iphone Chiama</a>

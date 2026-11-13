@@ -23,6 +23,8 @@ export function pulisciDocumento(b) {
     mostra_prezzi: b.mostra_prezzi === true,
     totale_manuale: n(b.totale_manuale),
     oneri_sicurezza: n(b.oneri_sicurezza),
+    sconto_valore: n(b.sconto_valore),
+    sconto_tipo: b.sconto_tipo === "importo" ? "importo" : "percentuale",
     iva_percentuale: n(b.iva_percentuale),
     acconti: (Array.isArray(b.acconti) ? b.acconti : []).slice(0, 20).map((a) => ({ descrizione: str(a.descrizione, 100), data: str(a.data, 10), importo: n(a.importo) })),
     condizioni: (Array.isArray(b.condizioni) ? b.condizioni : []).slice(0, 30).map((x) => str(x, 500)),
@@ -53,12 +55,16 @@ export function totali(d) {
   const somma = round2((d.voci || []).reduce((s, v) => s + importoVoce(v), 0));
   const lavori = isNum(d.totale_manuale) ? round2(d.totale_manuale) : somma;
   const oneri = isNum(d.oneri_sicurezza) ? round2(d.oneri_sicurezza) : 0;
-  const imponibile = round2(lavori + oneri);
+  /* sconto sul totale lavori (gli oneri per la sicurezza non si scontano) */
+  const sv = isNum(d.sconto_valore) && d.sconto_valore > 0 ? d.sconto_valore : 0;
+  const scontoPerc = sv && d.sconto_tipo !== "importo" ? Math.min(sv, 100) : null;
+  const sconto = scontoPerc !== null ? round2(lavori * scontoPerc / 100) : round2(Math.min(sv, Math.max(lavori, 0)));
+  const imponibile = round2(lavori - sconto + oneri);
   const aliquota = isNum(d.iva_percentuale) ? d.iva_percentuale : null;
   const iva = aliquota === null ? 0 : round2(imponibile * aliquota / 100);
   const totale = round2(imponibile + iva);
   const acconti = (d.acconti || []).filter((a) => isNum(a.importo) && a.importo > 0);
   const versato = round2(acconti.reduce((s, a) => s + a.importo, 0));
-  return { lavori, oneri, imponibile, aliquota, iva, totale, acconti, versato, saldo: round2(totale - versato) };
+  return { lavori, sconto, scontoPerc, oneri, imponibile, aliquota, iva, totale, acconti, versato, saldo: round2(totale - versato) };
 }
 

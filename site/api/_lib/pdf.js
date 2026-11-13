@@ -245,7 +245,9 @@ export async function buildPdf(d) {
   const condizioni = (d.condizioni || []).map((c) => c.trim()).filter(Boolean)
     .flatMap((c) => wrap("- " + c.replace(/^[-–•]\s*/, ""), 390, "regular", 11.46));
   const condH = condizioni.length ? 38 + (condizioni.length - 1) * 18 + 15 : 0;
-  const righeTot = [["Totale lavori", euro(t.lavori)], ["Oneri per la sicurezza", euro(t.oneri)]];
+  const righeTot = [["Totale lavori", euro(t.lavori)]];
+  if (t.sconto > 0) righeTot.push([t.scontoPerc !== null ? `Sconto ${qta(t.scontoPerc)}%` : "Sconto", "− " + euro(t.sconto)]);
+  righeTot.push(["Oneri per la sicurezza", euro(t.oneri)]);
   if (t.aliquota !== null) righeTot.push([`IVA ${qta(t.aliquota)}%`, euro(t.iva)]);
   /* acconti già versati: righe sotto il totale e un secondo blocco "da saldare" */
   const totH = righeTot.length * 29 + 1 + 54 + (t.acconti.length ? t.acconti.length * 29 + 55 : 0);

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=15">
+<link rel="stylesheet" href="/assets/css/admin.css?v=16">
 </head>
 <body>
 <header class="a-bar">
@@ -120,6 +120,12 @@
           <div class="grid grid-2" style="align-items:end">
             <div class="grid" style="gap:16px">
             <label class="field"><span>Totale lavori a corpo € (vuoto = somma delle voci)</span><input name="totale_manuale" inputmode="decimal" autocomplete="off"></label>
+            <div class="field"><span id="lbl-sconto">Sconto sul totale lavori</span>
+              <div class="sconto" role="group" aria-labelledby="lbl-sconto">
+                <input name="sconto_valore" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Valore dello sconto">
+                <select name="sconto_tipo" aria-label="Tipo di sconto"><option value="percentuale">%</option><option value="importo">€</option></select>
+              </div>
+            </div>
             <label class="field"><span>Oneri per la sicurezza €</span><input name="oneri_sicurezza" inputmode="decimal" value="0" autocomplete="off"></label>
             <label class="field"><span>IVA</span>
               <select name="iva_percentuale">

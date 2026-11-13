@@ -294,6 +294,8 @@
       mostra_prezzi: form.elements.mostra_prezzi.checked,
       totale_manuale: parseNum(g('totale_manuale')),
       oneri_sicurezza: parseNum(g('oneri_sicurezza')),
+      sconto_valore: parseNum(g('sconto_valore')),
+      sconto_tipo: g('sconto_tipo') === 'importo' ? 'importo' : 'percentuale',
       iva_percentuale: parseNum(g('iva_percentuale')),
       condizioni: getCondizioni(),
       acconti: getAcconti(),
@@ -322,13 +324,19 @@
     var manuale = parseNum(form.elements.totale_manuale.value);
     var lavori = manuale != null ? r2(manuale) : somma;
     var oneri = parseNum(form.elements.oneri_sicurezza.value) || 0;
-    imponibile = r2(lavori + oneri);
+    var sv = parseNum(form.elements.sconto_valore.value) || 0, sp = null, sconto = 0;
+    if (sv > 0) {
+      if (form.elements.sconto_tipo.value === 'importo') sconto = r2(Math.min(sv, Math.max(lavori, 0)));
+      else { sp = Math.min(sv, 100); sconto = r2(lavori * sp / 100); }
+    }
+    imponibile = r2(lavori - sconto + oneri);
     var al = parseNum(form.elements.iva_percentuale.value);
     var iva = al == null ? 0 : r2(imponibile * al / 100);
     var tot = r2(imponibile + iva);
     form.elements.totale_manuale.placeholder = EUR.format(somma);
     $('#totali').innerHTML =
       '<div><span>Totale lavori</span><span>' + EUR.format(lavori) + '</span></div>' +
+      (sconto > 0 ? '<div><span>Sconto' + (sp != null ? ' ' + fmtNum(sp) + '%' : '') + '</span><span>− ' + EUR.format(sconto) + '</span></div>' : '') +
       '<div><span>Oneri per la sicurezza</span><span>' + EUR.format(oneri) + '</span></div>' +
       (al == null ? '' : '<div><span>IVA ' + fmtNum(al) + '%</span><span>' + EUR.format(iva) + '</span></div>') +
       '<div class="big"><span>Totale ' + (al == null ? 'IVA esclusa' : 'IVA inclusa') + '</span><b>' + EUR.format(tot) + '</b></div>';
@@ -370,6 +378,8 @@
     form.elements.totale_manuale.value = fmtNum(d.totale_manuale != null ? d.totale_manuale
       : (!daBozza && senzaPrezzi && d.totale_scritto != null ? d.totale_scritto : null));
     form.elements.oneri_sicurezza.value = fmtNum(d.oneri_sicurezza != null ? d.oneri_sicurezza : 0);
+    form.elements.sconto_valore.value = fmtNum(d.sconto_valore != null ? d.sconto_valore : null);
+    form.elements.sconto_tipo.value = d.sconto_tipo === 'importo' ? 'importo' : 'percentuale';
     setCondizioni(d.condizioni && d.condizioni.length ? d.condizioni : condizioniPredefinite());
     setAcconti(d.acconti || []);
     if (d.cliente_id) form.dataset.clienteId = d.cliente_id; else delete form.dataset.clienteId;
