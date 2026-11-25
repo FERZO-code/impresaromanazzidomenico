@@ -218,12 +218,13 @@ h2 { font-size: 1.6rem; }
 .card .label { font-size: .7rem; }
 
 /* ---------- spostamento delle voci ---------- */
-.voci .azioni { display: flex; gap: 4px; white-space: nowrap; }
+.voci td.azioni { white-space: nowrap; }
+.voci td.azioni .mv, .voci td.azioni .del { vertical-align: top; margin-left: 2px; }
 .mv { width: 40px; height: 40px; border: 2px solid var(--rule); background: var(--paper); cursor: pointer; font-size: 1.1rem; line-height: 1; }
 .mv:not(:disabled):hover { border-color: var(--ink); }
 .mv:disabled { opacity: .3; cursor: default; }
 .del:hover { border-color: #B3261E; color: #B3261E; }
-@media (max-width: 760px) { .voci td.azioni { grid-column: 1 / -1; } .voci .azioni .mv, .voci .azioni .del { flex: 1; height: 44px; } }
+@media (max-width: 760px) { .voci td.azioni { grid-column: 1 / -1; display: flex; gap: 4px; } .voci .azioni .mv, .voci .azioni .del { flex: 1; height: 44px; } }
 
 /* sconto: valore + tipo (% o €) sulla stessa riga */
 .sconto { display: grid; grid-template-columns: 1fr 76px; gap: 8px; }
@@ -233,3 +234,29 @@ h2 { font-size: 1.6rem; }
 .badge { display: inline-block; margin-left: 10px; padding: 2px 9px; border-radius: 999px; background: #FF680B; color: #14100D; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; vertical-align: middle; }
 .badge--ok { background: #dfe6e0; color: #1f3a2a; }
 .card .msg { white-space: pre-wrap; }
+
+/* ---------- compilatore su computer ---------- */
+/* senza foto del conto la colonna laterale non deve occupare spazio */
+@media (min-width: 1100px) { .editor:has(> .side[hidden]) { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 761px) {
+  .voci { table-layout: fixed; }
+  .voci .c-um { width: 92px; } .voci .c-q { width: 88px; } .voci .c-p { width: 112px; } .voci .c-imp { width: 124px; } .voci .c-az { width: 138px; }
+  .voci th.r { text-align: right; }
+  .voci td { padding: 8px 4px; }
+  .voci td:first-child { padding-left: 8px; }
+  .voci input, .voci select { width: 100%; min-height: 44px; }
+  .voci select { padding-left: 8px; padding-right: 4px; }
+}
+.voci tr:nth-child(even) td { background: var(--paper-2); }
+/* importo calcolato da quantità × prezzo: si vede che non va scritto */
+.voci input[readonly] { background: transparent; border-color: transparent; font-weight: 700; color: var(--ink); cursor: default; }
+.voci .num input { font-variant-numeric: tabular-nums; }
+/* totali: riquadro allineato ai campi */
+.tot div { min-width: min(320px, 100%); }
+/* barra su telefono: con quattro sezioni i link vanno su una riga propria */
+@media (max-width: 700px) {
+  .a-bar-in { flex-wrap: wrap; row-gap: 10px; }
+  .a-nav { order: 3; width: 100%; display: flex; overflow-x: auto; scrollbar-width: none; }
+  .a-nav a { flex: 1; text-align: center; white-space: nowrap; }
+  .a-brand > span { display: block; }
+}

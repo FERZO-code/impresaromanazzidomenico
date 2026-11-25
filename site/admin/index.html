@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&amp;family=Barlow:wght@400;700&amp;display=swap">
-<link rel="stylesheet" href="/assets/css/admin.css?v=17">
+<link rel="stylesheet" href="/assets/css/admin.css?v=19">
 </head>
 <body>
 <header class="a-bar">
@@ -111,7 +111,8 @@
         <div class="tile grid" style="gap:16px">
           <h2>Voci</h2>
           <table class="voci">
-            <thead><tr><th style="width:44%">Descrizione</th><th>U.M.</th><th>Q.tà</th><th>Prezzo €</th><th>Importo €</th><th><span class="visually-hidden">Rimuovi</span></th></tr></thead>
+            <colgroup><col><col class="c-um"><col class="c-q"><col class="c-p"><col class="c-imp"><col class="c-az"></colgroup>
+            <thead><tr><th>Descrizione</th><th>U.M.</th><th class="r">Q.tà</th><th class="r">Prezzo €</th><th class="r">Importo €</th><th><span class="visually-hidden">Sposta o rimuovi</span></th></tr></thead>
             <tbody id="righe"></tbody>
           </table>
           <div class="actions"><button class="btn" type="button" id="aggiungi">+ Aggiungi voce</button></div>
@@ -203,7 +204,7 @@
   </div>
   <iframe id="anteprima-frame" title="Anteprima del PDF"></iframe>
 </dialog>
-<script src="/admin/rubrica.js"></script>
-<script src="/admin/app.js"></script>
+<script src="/admin/rubrica.js?v=18"></script>
+<script src="/admin/app.js?v=18"></script>
 </body>
 </html>

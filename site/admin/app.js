@@ -313,7 +313,7 @@
       var v = leggiRiga(tr), imp = tr.querySelectorAll('input')[2];
       if (v.quantita != null && v.prezzo_unitario != null) {
         var calc = r2(v.quantita * v.prezzo_unitario);
-        imp.value = fmtNum(calc); imp.readOnly = true; imp.title = 'Calcolato da quantità × prezzo';
+        imp.value = calc.toFixed(2).replace('.', ','); imp.readOnly = true; imp.title = 'Calcolato da quantità × prezzo';
         imponibile += calc;
       } else {
         imp.readOnly = false; imp.title = '';
